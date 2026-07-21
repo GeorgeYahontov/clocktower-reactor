@@ -6,7 +6,9 @@ signal restart_requested
 var state
 var label: Label
 var tutorial: Label
-var controls_legend: Label
+var menu_button: Button
+var help_panel: PanelContainer
+var help_label: Label
 var upgrade_title: Label
 var upgrade_panel: HBoxContainer
 var restart_button: Button
@@ -14,17 +16,33 @@ var restart_button: Button
 func bind(game_state) -> void:
 	state = game_state
 	label = Label.new()
-	label.position = Vector2(24.0, 24.0)
-	label.add_theme_font_size_override("font_size", 24)
+	label.position = Vector2(20.0, 20.0)
+	label.size = Vector2(330.0, 132.0)
+	label.add_theme_font_size_override("font_size", 22)
 	add_child(label)
 
-	controls_legend = Label.new()
-	controls_legend.position = Vector2(360.0, 24.0)
-	controls_legend.size = Vector2(336.0, 300.0)
-	controls_legend.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	controls_legend.add_theme_font_size_override("font_size", 18)
-	controls_legend.text = "Управление\nA/D: шаг по башне\nW/S: дорожка вверх/вниз\nQ/E или мышь: вращать\nSpace/ПКМ: импульс\n\nЛегенда\nФиолетовый !: аварийный вентиль\nСиний щит: тяжелый враг\nОранжевый блок: обычный враг\nРадар справа: вид сверху"
-	add_child(controls_legend)
+	menu_button = Button.new()
+	menu_button.text = "?"
+	menu_button.position = Vector2(650.0, 22.0)
+	menu_button.size = Vector2(48.0, 48.0)
+	menu_button.add_theme_font_size_override("font_size", 22)
+	menu_button.pressed.connect(func() -> void:
+		help_panel.visible = not help_panel.visible
+	)
+	add_child(menu_button)
+
+	help_panel = PanelContainer.new()
+	help_panel.position = Vector2(342.0, 78.0)
+	help_panel.size = Vector2(356.0, 390.0)
+	help_panel.visible = false
+	add_child(help_panel)
+
+	help_label = Label.new()
+	help_label.size = Vector2(332.0, 366.0)
+	help_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	help_label.add_theme_font_size_override("font_size", 17)
+	help_label.text = "Управление\nA/D: шаг по башне\nW/S: дорожка вверх/вниз\nQ/E или мышь: вращать\nSpace/ПКМ: импульс\n\nЛегенда\nФиолетовый !: аварийный вентиль\nСиний щит: тяжелый враг\nОранжевый блок: обычный враг\nРадар: вид сверху\nКрасная вспышка: урон\nЗеленая вспышка: ремонт\nЗолото: апгрейд"
+	help_panel.add_child(help_label)
 
 	tutorial = Label.new()
 	tutorial.position = Vector2(24.0, 1018.0)
@@ -63,15 +81,13 @@ func refresh() -> void:
 	if state == null or label == null:
 		return
 	var time_left: float = maxf(0.0, state.config.run_duration - state.run_time)
-	label.text = "Clocktower Reactor\nВремя: %.0f\nУровень: %d\nЭнергия: %d/%d\nРеактор: %d\nУбийства: %d\nВентили закрыто: %d\nИмпульс: %.1f" % [
+	label.text = "Clocktower Reactor\n%.0f c  |  Ур.%d\nЭнергия %d/%d\nРеактор %d/%d" % [
 		time_left,
 		state.level,
 		state.energy,
 		state.config.energy_per_level,
 		state.reactor_integrity,
-		state.kills,
-		state.repaired_vents,
-		state.pulse_cooldown_remaining
+		state.max_reactor_integrity
 	]
 
 	if tutorial == null:
@@ -81,13 +97,13 @@ func refresh() -> void:
 	elif state.run_status == "defeat":
 		tutorial.text = "Реактор пробит. Враги или аварии слишком сильно повредили систему."
 	elif state.run_time < 8.0:
-		tutorial.text = "Ты бежишь по окружности башни: A/D. W/S меняют дорожку. Вращай башню Q/E или мышью, чтобы видеть нужные сектора."
+		tutorial.text = "Беги по окружности башни: A/D. W/S меняют дорожку. Вращай Q/E или мышью, чтобы вывести угрозы на передний сектор."
 	elif state.run_time < 18.0:
-		tutorial.text = "Фиолетовый знак ! - аварийный вентиль. Встань на его сектор и дорожку, чтобы закрыть. Если таймер истечет, реактор получит урон."
+		tutorial.text = "Фиолетовый ! - аварийный вентиль. Встань на его сектор и дорожку, чтобы закрыть до истечения таймера."
 	elif state.run_time < 28.0:
-		tutorial.text = "Синие щиты - тяжелые враги: они медленные, но живучие. Space или ПКМ дает импульс рядом с тобой и помогает в критический момент."
+		tutorial.text = "Синие щиты - тяжелые враги. Space или ПКМ дает импульс рядом с тобой и помогает в критический момент."
 	else:
-		tutorial.text = "Выживи до конца таймера: закрывай вентили, держи врагов под автоогнем и выбирай компактные улучшения без остановки забега."
+		tutorial.text = "Выживи до конца таймера: закрывай вентили, держи врагов под автоогнем и выбирай апгрейды снизу без остановки забега."
 
 	_refresh_upgrade_panel()
 	restart_button.visible = state.run_status != "running"

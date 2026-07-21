@@ -17,7 +17,6 @@ func _draw() -> void:
 	_draw_touch_zones()
 	_draw_reactor_status_glow()
 	_draw_tower_shell()
-	_draw_front_work_zone()
 	_draw_lane_rings()
 	_draw_rotation_ticks()
 	_draw_sector_guides()
@@ -75,26 +74,12 @@ func _draw_reactor_status_glow() -> void:
 		draw_line(Vector2(34.0, 1114.0), Vector2(viewport_size.x - 34.0, 1114.0), Color(0.95, 0.82, 0.36, 0.34), 3.0)
 func _draw_tower_shell() -> void:
 	var center: Vector2 = projector.center
-	var top_center := Vector2(center.x, 330.0)
-	var bottom_center := Vector2(center.x, 885.0)
-	_draw_ellipse(top_center, projector.radius_x, 62.0, Color(0.26, 0.42, 0.44, 0.55), 5.0, 0.0, TAU)
-	_draw_ellipse(bottom_center, projector.radius_x, 76.0, Color(0.18, 0.30, 0.32, 0.72), 6.0, 0.0, TAU)
-	draw_line(Vector2(center.x - projector.radius_x, top_center.y), Vector2(center.x - projector.radius_x, bottom_center.y), Color(0.18, 0.30, 0.32, 0.65), 4.0)
-	draw_line(Vector2(center.x + projector.radius_x, top_center.y), Vector2(center.x + projector.radius_x, bottom_center.y), Color(0.18, 0.30, 0.32, 0.65), 4.0)
-	draw_line(Vector2(center.x, top_center.y - 42.0), Vector2(center.x, bottom_center.y + 34.0), Color(0.43, 0.95, 1.0, 0.32), 18.0)
-	draw_line(Vector2(center.x, top_center.y - 42.0), Vector2(center.x, bottom_center.y + 34.0), Color(0.82, 1.0, 1.0, 0.72), 5.0)
-	for y in [380.0, 508.0, 636.0, 764.0]:
-		_draw_ellipse(Vector2(center.x, y), 42.0, 13.0, Color(0.56, 0.94, 1.0, 0.36), 3.0, 0.0, TAU)
-	_draw_ellipse(Vector2(center.x, 610.0), projector.radius_x + 18.0, 92.0, Color(0.92, 0.82, 0.36, 0.18), 8.0, 0.0, TAU)
-
-func _draw_front_work_zone() -> void:
-	var left_bottom: Dictionary = _project_surface(state.tower_rotation - 0.85, 0)
-	var right_bottom: Dictionary = _project_surface(state.tower_rotation + 0.85, 0)
-	var right_top: Dictionary = _project_surface(state.tower_rotation + 0.85, state.config.lane_count - 1)
-	var left_top: Dictionary = _project_surface(state.tower_rotation - 0.85, state.config.lane_count - 1)
-	var points := PackedVector2Array([left_bottom["position"], right_bottom["position"], right_top["position"], left_top["position"]])
-	draw_colored_polygon(points, Color(0.95, 0.78, 0.28, 0.08))
-	draw_polyline(points, Color(0.95, 0.82, 0.36, 0.34), 2.0, true)
+	var top_y := 344.0
+	var bottom_y := 882.0
+	draw_line(Vector2(center.x, top_y), Vector2(center.x, bottom_y), Color(0.43, 0.95, 1.0, 0.20), 16.0)
+	draw_line(Vector2(center.x, top_y), Vector2(center.x, bottom_y), Color(0.82, 1.0, 1.0, 0.58), 4.0)
+	for y in [392.0, 520.0, 648.0, 776.0]:
+		_draw_ellipse(Vector2(center.x, y), 34.0, 10.0, Color(0.56, 0.94, 1.0, 0.28), 2.0, 0.0, TAU)
 
 func _draw_rotation_ticks() -> void:
 	for lane in state.config.lane_count:
@@ -116,14 +101,14 @@ func _draw_rotation_seam() -> void:
 	var top: Dictionary = _project_surface(0.0, state.config.lane_count - 1)
 	if not bottom["front"] and not top["front"]:
 		return
-	var alpha: float = 0.32 + 0.42 * maxf(bottom["alpha"], top["alpha"])
-	draw_line(bottom["position"], top["position"], Color(0.95, 0.82, 0.32, alpha), 5.0)
+	var alpha: float = 0.26 + 0.32 * maxf(bottom["alpha"], top["alpha"])
+	draw_line(bottom["position"], top["position"], Color(0.95, 0.82, 0.32, alpha), 4.0)
 	draw_circle(top["position"], 9.0 * top["scale"], Color(0.95, 0.82, 0.32, alpha))
 func _draw_lane_rings() -> void:
 	for lane in state.config.lane_count:
 		var lane_y := projector.center.y + projector.base_y - float(lane) * projector.lane_y
-		var alpha := 0.45 + float(lane) * 0.08
-		_draw_ellipse(Vector2(projector.center.x, lane_y), projector.radius_x, 52.0, Color(0.30, 0.56, 0.58, alpha), 3.0, 0.0, TAU)
+		var alpha := 0.34 + float(lane) * 0.07
+		_draw_ellipse(Vector2(projector.center.x, lane_y), projector.radius_x, 46.0, Color(0.30, 0.56, 0.58, alpha), 3.0, 0.0, TAU)
 
 func _draw_sector_guides() -> void:
 	for sector in state.config.sector_count:

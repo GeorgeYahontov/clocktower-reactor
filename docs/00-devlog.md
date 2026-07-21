@@ -62,6 +62,8 @@
 - Re-ran Godot 4.7 headless project check successfully after the upgrade-flow change.
 - Added event flash feedback: red for reactor damage, green for vent repairs, gold for applied upgrades, plus translucent mobile step zones.
 
+- Reduced visual clutter: removed the always-visible translucent cylinder shell and moved controls/legend text into a compact ? help menu.
+
 ## Step Log Format
 
 Every meaningful project action should be added here with:
