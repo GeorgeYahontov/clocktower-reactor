@@ -38,6 +38,8 @@
 - Added a restart button for victory/defeat states.
 - Re-ran Godot 4.7 headless project check successfully after phase 3 changes.
 
+- Moved the active working copy to `D:\Codex\clocktower-reactor` and updated the desktop Godot shortcut to the new path.
+
 ## Step Log Format
 
 Every meaningful project action should be added here with:
