@@ -1,4 +1,4 @@
-extends RefCounted
+﻿extends RefCounted
 class_name GameState
 
 const GameConfig = preload("res://scripts/data/GameConfig.gd")
@@ -79,6 +79,11 @@ func tick(delta: float) -> void:
 	if run_time >= config.run_duration:
 		run_status = "victory"
 
+func move_player_sector(delta_sector: int) -> void:
+	if run_status != "running":
+		return
+	player_sector = wrapi(player_sector + delta_sector, 0, config.sector_count)
+
 func move_player_lane(delta_lane: int) -> void:
 	if run_status != "running":
 		return
@@ -110,7 +115,10 @@ func restart() -> void:
 
 func _spawn_enemy() -> void:
 	var enemy := EnemyModel.new()
-	enemy.sector = randi_range(2, config.sector_count - 3)
+	var offset := randi_range(2, config.sector_count - 3)
+	if randi_range(0, 1) == 0:
+		offset = -offset
+	enemy.sector = wrapi(player_sector + offset, 0, config.sector_count)
 	enemy.lane = randi_range(0, config.lane_count - 1)
 	var heavy_roll := run_time > 20.0 and randi_range(0, 4) == 0
 	if heavy_roll:

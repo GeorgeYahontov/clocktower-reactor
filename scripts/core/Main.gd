@@ -41,9 +41,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			_touch_dragging = false
 		elif not _touch_dragging and touch_event.position.y > get_viewport_rect().size.y * 0.68:
 			if touch_event.position.x < get_viewport_rect().size.x * 0.5:
-				game_state.move_player_lane(-1)
+				game_state.move_player_sector(-1)
 			else:
-				game_state.move_player_lane(1)
+				game_state.move_player_sector(1)
 	if event is InputEventMouseButton:
 		var button_event := event as InputEventMouseButton
 		if button_event.button_index != MOUSE_BUTTON_LEFT:
@@ -55,9 +55,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			_mouse_dragging = false
 			if _mouse_drag_distance < 12.0 and button_event.position.y > get_viewport_rect().size.y * 0.68:
 				if button_event.position.x < get_viewport_rect().size.x * 0.5:
-					game_state.move_player_lane(-1)
+					game_state.move_player_sector(-1)
 				else:
-					game_state.move_player_lane(1)
+					game_state.move_player_sector(1)
 
 	if event is InputEventMouseMotion:
 		var motion_event := event as InputEventMouseMotion
@@ -66,11 +66,19 @@ func _unhandled_input(event: InputEvent) -> void:
 			game_state.rotate_tower(-motion_event.relative.x * game_state.config.drag_rotation_sensitivity)
 
 func _handle_preview_input(delta: float) -> void:
-	var lane_delta := 0
+	var sector_delta := 0
 	if Input.is_action_just_pressed("move_left"):
-		lane_delta -= 1
+		sector_delta -= 1
 	if Input.is_action_just_pressed("move_right"):
+		sector_delta += 1
+	if sector_delta != 0:
+		game_state.move_player_sector(sector_delta)
+
+	var lane_delta := 0
+	if Input.is_action_just_pressed("move_up"):
 		lane_delta += 1
+	if Input.is_action_just_pressed("move_down"):
+		lane_delta -= 1
 	if lane_delta != 0:
 		game_state.move_player_lane(lane_delta)
 

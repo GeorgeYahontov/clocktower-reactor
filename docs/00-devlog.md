@@ -40,6 +40,8 @@
 
 - Moved the active working copy to `D:\Codex\clocktower-reactor` and updated the desktop Godot shortcut to the new path.
 
+- Changed desktop/player movement so `A/D` walk around tower sectors, `W/S` change lanes, and `Q/E` or mouse drag rotate the tower.
+
 ## Step Log Format
 
 Every meaningful project action should be added here with:
