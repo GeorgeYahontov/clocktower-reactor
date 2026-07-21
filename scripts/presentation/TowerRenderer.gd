@@ -1,13 +1,14 @@
 extends Node2D
 
-const CylinderProjector = preload("res://scripts/presentation/CylinderProjector.gd")
-
 var state: RefCounted
-var projector: CylinderProjector
+
+const BELT_RECT := Rect2(Vector2(78.0, 256.0), Vector2(564.0, 650.0))
+const LANE_HEIGHT := 178.0
+const SECTOR_WIDTH := 86.0
+const FRONT_X := 360.0
 
 func bind(game_state: RefCounted) -> void:
 	state = game_state
-	projector = CylinderProjector.new()
 
 func _draw() -> void:
 	if state == null:
@@ -16,49 +17,41 @@ func _draw() -> void:
 	_draw_background()
 	_draw_touch_zones()
 	_draw_reactor_status_glow()
-	_draw_tower_shell()
-	_draw_lane_rings()
-	_draw_rotation_ticks()
-	_draw_sector_guides()
-	_draw_grid_points()
-	_draw_rotation_seam()
-	_draw_vents()
+	_draw_reactor_belt()
+	_draw_belt_grid()
 	_draw_energy_pulses()
 	_draw_pulse_effects()
 	_draw_event_flashes()
 	_draw_shot_traces()
+	_draw_vents()
 	_draw_enemies()
 	_draw_player()
 	_draw_radar()
 	_draw_result_overlay()
 
+func _draw_background() -> void:
+	draw_rect(Rect2(Vector2.ZERO, get_viewport_rect().size), Color("#101820"))
+	for i in 10:
+		var y: float = 120.0 + float(i) * 104.0
+		draw_line(Vector2(0.0, y), Vector2(720.0, y + 26.0), Color(0.10, 0.16, 0.18, 0.30), 2.0)
+
 func _draw_touch_zones() -> void:
 	var viewport_size: Vector2 = get_viewport_rect().size
-	var zone_top := viewport_size.y * 0.70
-	var zone_height := 164.0
-	var left_rect := Rect2(Vector2(18.0, zone_top), Vector2(132.0, zone_height))
-	var right_rect := Rect2(Vector2(viewport_size.x - 150.0, zone_top), Vector2(132.0, zone_height))
-	_draw_touch_zone(left_rect, -1)
-	_draw_touch_zone(right_rect, 1)
+	var zone_top: float = viewport_size.y * 0.70
+	_draw_touch_zone(Rect2(Vector2(18.0, zone_top), Vector2(132.0, 164.0)), -1)
+	_draw_touch_zone(Rect2(Vector2(viewport_size.x - 150.0, zone_top), Vector2(132.0, 164.0)), 1)
 
 func _draw_touch_zone(rect: Rect2, direction: int) -> void:
-	var fill := Color(0.10, 0.18, 0.19, 0.32)
-	var border := Color(0.42, 0.78, 0.76, 0.34)
-	draw_rect(rect, fill, true)
-	draw_rect(rect, border, false, 3.0)
-	var center := rect.get_center()
-	var arrow_width := 28.0 * float(direction)
+	draw_rect(rect, Color(0.08, 0.15, 0.16, 0.24), true)
+	draw_rect(rect, Color(0.42, 0.78, 0.76, 0.25), false, 2.0)
+	var center: Vector2 = rect.get_center()
+	var arrow_width: float = 28.0 * float(direction)
 	var points := PackedVector2Array([
 		center + Vector2(arrow_width, 0.0),
 		center + Vector2(-arrow_width * 0.45, -30.0),
 		center + Vector2(-arrow_width * 0.45, 30.0)
 	])
-	draw_colored_polygon(points, Color(0.72, 0.96, 0.92, 0.42))
-func _draw_background() -> void:
-	draw_rect(Rect2(Vector2.ZERO, get_viewport_rect().size), Color("#101820"))
-	for i in 12:
-		var y := 90.0 + float(i) * 92.0
-		draw_line(Vector2(0.0, y), Vector2(720.0, y + 32.0), Color(0.12, 0.18, 0.21, 0.28), 2.0)
+	draw_colored_polygon(points, Color(0.72, 0.96, 0.92, 0.34))
 
 func _draw_reactor_status_glow() -> void:
 	var viewport_size: Vector2 = get_viewport_rect().size
@@ -72,88 +65,64 @@ func _draw_reactor_status_glow() -> void:
 		var panel_rect := Rect2(Vector2(0.0, 1088.0), Vector2(viewport_size.x, 192.0))
 		draw_rect(panel_rect, Color(0.95, 0.72, 0.24, 0.11))
 		draw_line(Vector2(34.0, 1114.0), Vector2(viewport_size.x - 34.0, 1114.0), Color(0.95, 0.82, 0.36, 0.34), 3.0)
-func _draw_tower_shell() -> void:
-	var center: Vector2 = projector.center
-	var top_y := 344.0
-	var bottom_y := 882.0
-	draw_line(Vector2(center.x, top_y), Vector2(center.x, bottom_y), Color(0.43, 0.95, 1.0, 0.20), 16.0)
-	draw_line(Vector2(center.x, top_y), Vector2(center.x, bottom_y), Color(0.82, 1.0, 1.0, 0.58), 4.0)
-	for y in [392.0, 520.0, 648.0, 776.0]:
-		_draw_ellipse(Vector2(center.x, y), 34.0, 10.0, Color(0.56, 0.94, 1.0, 0.28), 2.0, 0.0, TAU)
 
-func _draw_rotation_ticks() -> void:
+func _draw_reactor_belt() -> void:
+	draw_rect(BELT_RECT.grow(14.0), Color(0.03, 0.06, 0.07, 0.70), true)
+	draw_rect(BELT_RECT.grow(14.0), Color(0.30, 0.56, 0.58, 0.52), false, 4.0)
+	draw_rect(BELT_RECT, Color(0.07, 0.12, 0.13, 0.88), true)
 	for lane in state.config.lane_count:
-		for marker in state.config.sector_count * 2:
-			var sector_value: float = float(marker) * 0.5
-			var projected: Dictionary = _project_surface(sector_value, lane)
-			if not projected["front"]:
+		var lane_rect: Rect2 = _lane_rect(lane)
+		var fill := Color(0.09, 0.16, 0.17, 0.82) if lane % 2 == 0 else Color(0.06, 0.12, 0.13, 0.86)
+		draw_rect(lane_rect, fill, true)
+		draw_rect(lane_rect, Color(0.31, 0.58, 0.58, 0.42), false, 2.0)
+
+	_draw_center_reactor_core()
+	draw_line(Vector2(FRONT_X, BELT_RECT.position.y - 20.0), Vector2(FRONT_X, BELT_RECT.end.y + 20.0), Color(0.95, 0.78, 0.28, 0.62), 5.0)
+	draw_line(Vector2(BELT_RECT.position.x, BELT_RECT.position.y - 16.0), Vector2(BELT_RECT.end.x, BELT_RECT.position.y - 16.0), Color(0.42, 0.78, 0.76, 0.34), 3.0)
+	draw_line(Vector2(BELT_RECT.position.x, BELT_RECT.end.y + 16.0), Vector2(BELT_RECT.end.x, BELT_RECT.end.y + 16.0), Color(0.42, 0.78, 0.76, 0.34), 3.0)
+
+func _draw_center_reactor_core() -> void:
+	var top: Vector2 = Vector2(FRONT_X, BELT_RECT.position.y + 30.0)
+	var bottom: Vector2 = Vector2(FRONT_X, BELT_RECT.end.y - 30.0)
+	draw_line(top, bottom, Color(0.42, 0.95, 1.0, 0.16), 22.0)
+	draw_line(top, bottom, Color(0.82, 1.0, 1.0, 0.48), 4.0)
+	for y in [340.0, 506.0, 672.0, 838.0]:
+		draw_arc(Vector2(FRONT_X, y), 38.0, 0.0, TAU, 48, Color(0.58, 0.96, 1.0, 0.24), 2.0)
+
+func _draw_belt_grid() -> void:
+	for lane in state.config.lane_count:
+		for marker in state.config.sector_count:
+			var projected: Dictionary = _project_belt(marker, lane)
+			if not projected["visible"]:
 				continue
 			var pos: Vector2 = projected["position"]
-			var scale: float = projected["scale"]
-			var alpha: float = 0.22 + 0.42 * projected["alpha"]
-			var long_tick: bool = marker % 2 == 0
-			var half: float = 13.0 if long_tick else 7.0
-			var width: float = 3.0 if long_tick else 2.0
-			draw_line(pos + Vector2(-half, -5.0) * scale, pos + Vector2(half, 5.0) * scale, Color(0.74, 0.95, 0.92, alpha), width)
+			var alpha: float = projected["alpha"]
+			var lane_rect: Rect2 = _lane_rect(lane)
+			draw_line(Vector2(pos.x, lane_rect.position.y + 16.0), Vector2(pos.x, lane_rect.end.y - 16.0), Color(0.35, 0.58, 0.58, 0.18 * alpha), 2.0)
+			draw_circle(pos, 5.0, Color(0.38, 0.62, 0.62, 0.32 * alpha))
+			_draw_surface_tick(pos, alpha)
 
-func _draw_rotation_seam() -> void:
-	var bottom: Dictionary = _project_surface(0.0, 0)
-	var top: Dictionary = _project_surface(0.0, state.config.lane_count - 1)
-	if not bottom["front"] and not top["front"]:
-		return
-	var alpha: float = 0.26 + 0.32 * maxf(bottom["alpha"], top["alpha"])
-	draw_line(bottom["position"], top["position"], Color(0.95, 0.82, 0.32, alpha), 4.0)
-	draw_circle(top["position"], 9.0 * top["scale"], Color(0.95, 0.82, 0.32, alpha))
-func _draw_lane_rings() -> void:
-	for lane in state.config.lane_count:
-		var lane_y := projector.center.y + projector.base_y - float(lane) * projector.lane_y
-		var alpha := 0.34 + float(lane) * 0.07
-		_draw_ellipse(Vector2(projector.center.x, lane_y), projector.radius_x, 46.0, Color(0.30, 0.56, 0.58, alpha), 3.0, 0.0, TAU)
-
-func _draw_sector_guides() -> void:
-	for sector in state.config.sector_count:
-		var bottom: Dictionary = projector.project(sector, 0, state.tower_rotation, state.config.sector_count)
-		var top: Dictionary = projector.project(sector, state.config.lane_count - 1, state.tower_rotation, state.config.sector_count)
-		if not bottom["front"] and not top["front"]:
-			continue
-		var alpha: float = 0.18 * maxf(bottom["alpha"], top["alpha"])
-		draw_line(bottom["position"], top["position"], Color(0.48, 0.72, 0.72, alpha), 2.0)
-
-func _draw_grid_points() -> void:
-	for lane in state.config.lane_count:
-		for sector in state.config.sector_count:
-			var projected: Dictionary = projector.project(sector, lane, state.tower_rotation, state.config.sector_count)
-			if not projected["front"]:
-				continue
-			var color := Color(0.30, 0.46, 0.48, 0.30 * projected["alpha"])
-			draw_circle(projected["position"], 6.0 * projected["scale"], color)
+func _draw_surface_tick(pos: Vector2, alpha: float) -> void:
+	draw_line(pos + Vector2(-12.0, -8.0), pos + Vector2(12.0, 8.0), Color(0.72, 0.95, 0.92, 0.38 * alpha), 2.0)
 
 func _draw_vents() -> void:
 	for vent in state.vents:
-		var projected: Dictionary = projector.project(vent.sector, vent.lane, state.tower_rotation, state.config.sector_count)
-		if not projected["front"]:
+		var projected: Dictionary = _project_belt(vent.sector, vent.lane)
+		if not projected["visible"]:
 			continue
-		var urgency: float = vent.urgency()
-		var radius: float = lerpf(18.0, 34.0, urgency) * projected["scale"]
 		var pos: Vector2 = projected["position"]
+		var urgency: float = vent.urgency()
+		var radius: float = lerpf(18.0, 34.0, urgency)
 		var color := Color(0.88, 0.18, 1.0, projected["alpha"])
-		var warning := Color(1.0, 0.92, 0.24, projected["alpha"])
-		draw_circle(pos, radius, Color(color.r, color.g, color.b, 0.28 * projected["alpha"]))
-		draw_arc(pos, radius, -PI * 0.5, -PI * 0.5 + TAU * maxf(0.05, vent.ttl / vent.life), 32, warning, 5.0)
+		draw_circle(pos, radius, Color(color.r, color.g, color.b, 0.25 * projected["alpha"]))
+		draw_arc(pos, radius, -PI * 0.5, -PI * 0.5 + TAU * maxf(0.05, vent.ttl / vent.life), 32, Color(1.0, 0.92, 0.24, projected["alpha"]), 5.0)
 		draw_line(pos + Vector2(0.0, -radius * 0.48), pos + Vector2(0.0, radius * 0.12), color, 5.0)
-		draw_circle(pos + Vector2(0.0, radius * 0.48), 3.5 * projected["scale"], color)
+		draw_circle(pos + Vector2(0.0, radius * 0.48), 3.5, color)
 
 func _draw_enemies() -> void:
-	var sorted: Array = state.enemies.duplicate()
-	sorted.sort_custom(func(a, b) -> bool:
-		var pa: Dictionary = projector.project(a.sector, a.lane, state.tower_rotation, state.config.sector_count)
-		var pb: Dictionary = projector.project(b.sector, b.lane, state.tower_rotation, state.config.sector_count)
-		return pa["depth"] < pb["depth"]
-	)
-
-	for enemy in sorted:
-		var projected: Dictionary = projector.project(enemy.sector, enemy.lane, state.tower_rotation, state.config.sector_count)
-		if not projected["front"]:
+	for enemy in state.enemies:
+		var projected: Dictionary = _project_belt(enemy.sector, enemy.lane)
+		if not projected["visible"]:
 			continue
 		if enemy.kind == "bulwark":
 			_draw_bulwark(projected)
@@ -161,80 +130,80 @@ func _draw_enemies() -> void:
 			_draw_runner(projected)
 
 func _draw_runner(projected: Dictionary) -> void:
-	var size: Vector2 = Vector2(30.0, 44.0) * projected["scale"]
+	var size := Vector2(34.0, 48.0)
 	var pos: Vector2 = projected["position"] - size * 0.5
 	draw_rect(Rect2(pos, size), Color(0.89, 0.34, 0.18, projected["alpha"]), true, 4.0)
 	draw_rect(Rect2(pos, size), Color(1.0, 0.84, 0.32, projected["alpha"]), false, 2.0)
-	draw_line(projected["position"] + Vector2(-8, -4) * projected["scale"], projected["position"] + Vector2(8, -4) * projected["scale"], Color(0.10, 0.06, 0.04, projected["alpha"]), 3.0)
+	draw_line(projected["position"] + Vector2(-9.0, -5.0), projected["position"] + Vector2(9.0, -5.0), Color(0.10, 0.06, 0.04, projected["alpha"]), 3.0)
 
 func _draw_bulwark(projected: Dictionary) -> void:
 	var center: Vector2 = projected["position"]
-	var scale: float = projected["scale"]
 	var points := PackedVector2Array([
-		center + Vector2(0.0, -34.0) * scale,
-		center + Vector2(28.0, -16.0) * scale,
-		center + Vector2(22.0, 24.0) * scale,
-		center + Vector2(0.0, 36.0) * scale,
-		center + Vector2(-22.0, 24.0) * scale,
-		center + Vector2(-28.0, -16.0) * scale
+		center + Vector2(0.0, -38.0),
+		center + Vector2(30.0, -18.0),
+		center + Vector2(24.0, 26.0),
+		center + Vector2(0.0, 40.0),
+		center + Vector2(-24.0, 26.0),
+		center + Vector2(-30.0, -18.0)
 	])
 	draw_colored_polygon(points, Color(0.35, 0.58, 0.86, projected["alpha"]))
 	draw_polyline(points, Color(0.82, 0.96, 1.0, projected["alpha"]), 3.0, true)
-	draw_circle(center, 9.0 * scale, Color(0.08, 0.18, 0.28, projected["alpha"]))
-	draw_line(center + Vector2(-14.0, -3.0) * scale, center + Vector2(14.0, -3.0) * scale, Color(0.82, 0.96, 1.0, projected["alpha"]), 3.0)
+	draw_circle(center, 9.0, Color(0.08, 0.18, 0.28, projected["alpha"]))
+	draw_line(center + Vector2(-14.0, -3.0), center + Vector2(14.0, -3.0), Color(0.82, 0.96, 1.0, projected["alpha"]), 3.0)
+
+func _draw_player() -> void:
+	var projected: Dictionary = _project_belt(state.player_sector, state.player_lane)
+	var position: Vector2 = projected["position"]
+	draw_circle(position, 31.0, Color("#f2c14e"))
+	draw_circle(position + Vector2(0.0, -8.0), 10.0, Color("#101820"))
+	draw_arc(position, 48.0, -0.8, 0.8, 16, Color(0.95, 0.92, 0.62, 0.45), 5.0)
 
 func _draw_shot_traces() -> void:
 	for trace in state.shot_traces:
-		var start_projected: Dictionary = projector.project(trace["from_sector"], trace["from_lane"], state.tower_rotation, state.config.sector_count)
-		var end_projected: Dictionary = projector.project(trace["to_sector"], trace["to_lane"], state.tower_rotation, state.config.sector_count)
-		if not start_projected["front"] or not end_projected["front"]:
+		var start_projected: Dictionary = _project_belt(trace["from_sector"], trace["from_lane"])
+		var end_projected: Dictionary = _project_belt(trace["to_sector"], trace["to_lane"])
+		if not start_projected["visible"] or not end_projected["visible"]:
 			continue
 		var progress: float = clampf(float(trace["ttl"]) / float(trace["life"]), 0.0, 1.0)
 		draw_line(start_projected["position"], end_projected["position"], Color(0.45, 0.95, 1.0, progress), 5.0)
-		draw_circle(end_projected["position"], 12.0 * end_projected["scale"], Color(1.0, 0.95, 0.45, progress))
+		draw_circle(end_projected["position"], 12.0, Color(1.0, 0.95, 0.45, progress))
 
 func _draw_energy_pulses() -> void:
 	for pulse in state.energy_pulses:
-		var projected: Dictionary = projector.project(pulse["sector"], pulse["lane"], state.tower_rotation, state.config.sector_count)
-		if not projected["front"]:
+		var projected: Dictionary = _project_belt(pulse["sector"], pulse["lane"])
+		if not projected["visible"]:
 			continue
 		var progress: float = 1.0 - clampf(float(pulse["ttl"]) / float(pulse["life"]), 0.0, 1.0)
-		var radius: float = lerpf(8.0, 34.0, progress) * projected["scale"]
+		var radius: float = lerpf(8.0, 34.0, progress)
 		var alpha: float = 1.0 - progress
 		draw_circle(projected["position"], radius, Color(0.45, 0.95, 1.0, alpha * projected["alpha"]))
 
 func _draw_pulse_effects() -> void:
 	for pulse in state.pulse_effects:
-		var projected: Dictionary = projector.project(pulse["sector"], pulse["lane"], state.tower_rotation, state.config.sector_count)
-		if not projected["front"]:
+		var projected: Dictionary = _project_belt(pulse["sector"], pulse["lane"])
+		if not projected["visible"]:
 			continue
 		var progress: float = 1.0 - clampf(float(pulse["ttl"]) / float(pulse["life"]), 0.0, 1.0)
-		var radius: float = lerpf(22.0, 118.0, progress) * projected["scale"]
+		var radius: float = lerpf(22.0, 118.0, progress)
 		var alpha: float = 1.0 - progress
 		draw_arc(projected["position"], radius, 0.0, TAU, 48, Color(0.52, 1.0, 0.78, alpha * projected["alpha"]), 8.0)
-		draw_circle(projected["position"], 18.0 * projected["scale"], Color(0.52, 1.0, 0.78, 0.32 * alpha))
+		draw_circle(projected["position"], 18.0, Color(0.52, 1.0, 0.78, 0.32 * alpha))
 
 func _draw_event_flashes() -> void:
 	for flash in state.event_flashes:
-		var projected: Dictionary = projector.project(int(flash["sector"]), int(flash["lane"]), state.tower_rotation, state.config.sector_count)
-		if not projected["front"]:
+		var projected: Dictionary = _project_belt(int(flash["sector"]), int(flash["lane"]))
+		if not projected["visible"]:
 			continue
 		var progress: float = 1.0 - clampf(float(flash["ttl"]) / float(flash["life"]), 0.0, 1.0)
 		var alpha: float = 1.0 - progress
-		var radius: float = lerpf(20.0, 86.0, progress) * projected["scale"]
+		var radius: float = lerpf(20.0, 86.0, progress)
 		var color := Color(0.95, 0.20, 0.14, alpha * projected["alpha"])
 		if String(flash["kind"]) == "repair":
 			color = Color(0.35, 1.0, 0.68, alpha * projected["alpha"])
 		elif String(flash["kind"]) == "upgrade":
 			color = Color(0.95, 0.78, 0.28, alpha * projected["alpha"])
 		draw_arc(projected["position"], radius, 0.0, TAU, 48, color, 7.0)
-		draw_circle(projected["position"], 14.0 * projected["scale"], Color(color.r, color.g, color.b, 0.24 * alpha))
-func _draw_player() -> void:
-	var projected: Dictionary = projector.project(state.player_sector, state.player_lane, state.tower_rotation, state.config.sector_count)
-	var position: Vector2 = projected["position"]
-	draw_circle(position, 30.0 * projected["scale"], Color("#f2c14e"))
-	draw_circle(position + Vector2(0.0, -8.0), 10.0 * projected["scale"], Color("#101820"))
-	draw_arc(position, 46.0 * projected["scale"], -0.8, 0.8, 16, Color(0.95, 0.92, 0.62, 0.45), 5.0)
+		draw_circle(projected["position"], 14.0, Color(color.r, color.g, color.b, 0.24 * alpha))
 
 func _draw_radar() -> void:
 	var sector_count: int = state.config.sector_count
@@ -263,6 +232,29 @@ func _draw_radar() -> void:
 	draw_circle(player_pos, 7.0, Color(0.95, 0.76, 0.31, 1.0))
 	draw_circle(player_pos, 10.0, Color(0.95, 0.76, 0.31, 0.22))
 
+func _draw_result_overlay() -> void:
+	if state.run_status == "running":
+		return
+	var viewport_size: Vector2 = get_viewport_rect().size
+	draw_rect(Rect2(Vector2.ZERO, viewport_size), Color(0.02, 0.04, 0.05, 0.68))
+
+func _project_belt(sector: int, lane: int) -> Dictionary:
+	var offset: float = _shortest_sector_distance(float(sector), state.tower_rotation)
+	var x: float = FRONT_X + offset * SECTOR_WIDTH
+	var lane_rect: Rect2 = _lane_rect(lane)
+	var y: float = lane_rect.get_center().y
+	var edge_fade: float = clampf(1.0 - maxf(0.0, absf(x - FRONT_X) - 190.0) / 120.0, 0.0, 1.0)
+	return {
+		"position": Vector2(x, y),
+		"alpha": lerpf(0.28, 1.0, edge_fade),
+		"visible": x > BELT_RECT.position.x - 44.0 and x < BELT_RECT.end.x + 44.0
+	}
+
+func _lane_rect(lane: int) -> Rect2:
+	var visual_lane: int = state.config.lane_count - 1 - lane
+	var top: float = BELT_RECT.position.y + 46.0 + float(visual_lane) * LANE_HEIGHT
+	return Rect2(Vector2(BELT_RECT.position.x + 18.0, top), Vector2(BELT_RECT.size.x - 36.0, LANE_HEIGHT - 20.0))
+
 func _radar_position(center: Vector2, radius: float, sector: int, lane: int, sector_count: int) -> Vector2:
 	var angle := _radar_angle(sector, sector_count)
 	var lane_ratio := 0.42 + (float(lane) / maxf(1.0, float(state.config.lane_count - 1))) * 0.48
@@ -270,32 +262,7 @@ func _radar_position(center: Vector2, radius: float, sector: int, lane: int, sec
 
 func _radar_angle(sector: int, sector_count: int) -> float:
 	return ((float(sector) - state.tower_rotation) / float(sector_count)) * TAU - PI * 0.5
-func _draw_result_overlay() -> void:
-	if state.run_status == "running":
-		return
-	var viewport_size: Vector2 = get_viewport_rect().size
-	var alpha: float = 0.68 if state.run_status != "running" else 0.34
-	draw_rect(Rect2(Vector2.ZERO, viewport_size), Color(0.02, 0.04, 0.05, alpha))
 
-func _project_surface(sector_value: float, lane: int) -> Dictionary:
-	var angle: float = ((sector_value - state.tower_rotation) / float(state.config.sector_count)) * TAU
-	var side: float = sin(angle)
-	var depth: float = cos(angle)
-	var x: float = projector.center.x + side * projector.radius_x
-	var y: float = projector.center.y + projector.base_y - float(lane) * projector.lane_y - depth * 36.0
-	var scale: float = lerpf(0.62, 1.18, (depth + 1.0) * 0.5)
-	var alpha: float = lerpf(0.18, 1.0, (depth + 1.0) * 0.5)
-	return {
-		"position": Vector2(x, y),
-		"scale": scale,
-		"alpha": alpha,
-		"depth": depth,
-		"front": depth > -0.15
-	}
-func _draw_ellipse(center: Vector2, radius_x: float, radius_y: float, color: Color, width: float, start_angle: float, end_angle: float) -> void:
-	var points := PackedVector2Array()
-	var steps := 72
-	for i in steps + 1:
-		var t := lerpf(start_angle, end_angle, float(i) / float(steps))
-		points.append(center + Vector2(cos(t) * radius_x, sin(t) * radius_y))
-	draw_polyline(points, color, width)
+func _shortest_sector_distance(a: float, b: float) -> float:
+	var half: float = float(state.config.sector_count) * 0.5
+	return wrapf(a - b + half, 0.0, float(state.config.sector_count)) - half

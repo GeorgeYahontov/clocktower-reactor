@@ -66,6 +66,8 @@
 
 - Converted the top HUD into a compact instrument panel with energy, reactor integrity, and pulse readiness bars.
 
+- Prototyped a vertical unfolded reactor belt renderer while keeping the circular sector/lane simulation and radar model intact.
+
 ## Step Log Format
 
 Every meaningful project action should be added here with:
