@@ -60,6 +60,8 @@
 - Kept gameplay running while upgrade choices are visible: movement, rotation, auto-fire, vents, enemies, and pulse continue.
 - Restored HUD and gameplay documentation text as UTF-8 Russian after mojibake was found in local files.
 - Re-ran Godot 4.7 headless project check successfully after the upgrade-flow change.
+- Added event flash feedback: red for reactor damage, green for vent repairs, gold for applied upgrades, plus translucent mobile step zones.
+
 ## Step Log Format
 
 Every meaningful project action should be added here with:

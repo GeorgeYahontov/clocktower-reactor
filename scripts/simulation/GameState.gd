@@ -26,6 +26,7 @@ var vents: Array[VentModel] = []
 var shot_traces: Array[Dictionary] = []
 var energy_pulses: Array[Dictionary] = []
 var pulse_effects: Array[Dictionary] = []
+var event_flashes: Array[Dictionary] = []
 
 var _spawn_timer := 0.0
 var _shot_timer := 0.0
@@ -52,6 +53,7 @@ func setup_new_run() -> void:
 	shot_traces.clear()
 	energy_pulses.clear()
 	pulse_effects.clear()
+	event_flashes.clear()
 	_spawn_timer = 0.2
 	_shot_timer = 0.35
 	_vent_timer = 7.0
@@ -154,6 +156,13 @@ func apply_upgrade(upgrade_id: String) -> void:
 			continue
 		applied_upgrades.append(upgrade_id)
 		_apply_upgrade_effect(upgrade)
+		event_flashes.append({
+			"kind": "upgrade",
+			"sector": player_sector,
+			"lane": player_lane,
+			"ttl": 0.70,
+			"life": 0.70
+		})
 		pending_upgrade_choices.clear()
 		return
 
@@ -233,6 +242,13 @@ func _resolve_contacts() -> void:
 	for enemy in enemies:
 		if enemy.sector == player_sector and enemy.lane == player_lane:
 			enemy.hp = 0
+			event_flashes.append({
+				"kind": "damage",
+				"sector": player_sector,
+				"lane": player_lane,
+				"ttl": 0.55,
+				"life": 0.55
+			})
 			reactor_integrity -= config.enemy_contact_damage
 			if reactor_integrity <= 0:
 				run_status = "defeat"
@@ -241,6 +257,13 @@ func _tick_vents(delta: float) -> void:
 	for vent in vents:
 		vent.tick(delta)
 		if not vent.active and vent.ttl <= 0.0:
+			event_flashes.append({
+				"kind": "damage",
+				"sector": vent.sector,
+				"lane": vent.lane,
+				"ttl": 0.70,
+				"life": 0.70
+			})
 			reactor_integrity -= config.vent_damage
 			vent.ttl = 999.0
 			if reactor_integrity <= 0:
@@ -262,6 +285,13 @@ func _repair_vent(vent: VentModel) -> void:
 		return
 	vent.active = false
 	repaired_vents += 1
+	event_flashes.append({
+		"kind": "repair",
+		"sector": vent.sector,
+		"lane": vent.lane,
+		"ttl": 0.65,
+		"life": 0.65
+	})
 	energy_pulses.append({
 		"sector": vent.sector,
 		"lane": vent.lane,
@@ -292,6 +322,12 @@ func _tick_effects(delta: float) -> void:
 		pulse["ttl"] = float(pulse["ttl"]) - delta
 	pulse_effects = pulse_effects.filter(func(pulse: Dictionary) -> bool:
 		return float(pulse["ttl"]) > 0.0
+	)
+
+	for flash in event_flashes:
+		flash["ttl"] = float(flash["ttl"]) - delta
+	event_flashes = event_flashes.filter(func(flash: Dictionary) -> bool:
+		return float(flash["ttl"]) > 0.0
 	)
 
 func _apply_upgrade_effect(upgrade: Dictionary) -> void:

@@ -14,6 +14,7 @@ func _draw() -> void:
 		return
 
 	_draw_background()
+	_draw_touch_zones()
 	_draw_reactor_status_glow()
 	_draw_tower_shell()
 	_draw_front_work_zone()
@@ -25,12 +26,35 @@ func _draw() -> void:
 	_draw_vents()
 	_draw_energy_pulses()
 	_draw_pulse_effects()
+	_draw_event_flashes()
 	_draw_shot_traces()
 	_draw_enemies()
 	_draw_player()
 	_draw_radar()
 	_draw_result_overlay()
 
+func _draw_touch_zones() -> void:
+	var viewport_size: Vector2 = get_viewport_rect().size
+	var zone_top := viewport_size.y * 0.70
+	var zone_height := 164.0
+	var left_rect := Rect2(Vector2(18.0, zone_top), Vector2(132.0, zone_height))
+	var right_rect := Rect2(Vector2(viewport_size.x - 150.0, zone_top), Vector2(132.0, zone_height))
+	_draw_touch_zone(left_rect, -1)
+	_draw_touch_zone(right_rect, 1)
+
+func _draw_touch_zone(rect: Rect2, direction: int) -> void:
+	var fill := Color(0.10, 0.18, 0.19, 0.32)
+	var border := Color(0.42, 0.78, 0.76, 0.34)
+	draw_rect(rect, fill, true)
+	draw_rect(rect, border, false, 3.0)
+	var center := rect.get_center()
+	var arrow_width := 28.0 * float(direction)
+	var points := PackedVector2Array([
+		center + Vector2(arrow_width, 0.0),
+		center + Vector2(-arrow_width * 0.45, -30.0),
+		center + Vector2(-arrow_width * 0.45, 30.0)
+	])
+	draw_colored_polygon(points, Color(0.72, 0.96, 0.92, 0.42))
 func _draw_background() -> void:
 	draw_rect(Rect2(Vector2.ZERO, get_viewport_rect().size), Color("#101820"))
 	for i in 12:
@@ -205,6 +229,21 @@ func _draw_pulse_effects() -> void:
 		draw_arc(projected["position"], radius, 0.0, TAU, 48, Color(0.52, 1.0, 0.78, alpha * projected["alpha"]), 8.0)
 		draw_circle(projected["position"], 18.0 * projected["scale"], Color(0.52, 1.0, 0.78, 0.32 * alpha))
 
+func _draw_event_flashes() -> void:
+	for flash in state.event_flashes:
+		var projected: Dictionary = projector.project(int(flash["sector"]), int(flash["lane"]), state.tower_rotation, state.config.sector_count)
+		if not projected["front"]:
+			continue
+		var progress: float = 1.0 - clampf(float(flash["ttl"]) / float(flash["life"]), 0.0, 1.0)
+		var alpha: float = 1.0 - progress
+		var radius: float = lerpf(20.0, 86.0, progress) * projected["scale"]
+		var color := Color(0.95, 0.20, 0.14, alpha * projected["alpha"])
+		if String(flash["kind"]) == "repair":
+			color = Color(0.35, 1.0, 0.68, alpha * projected["alpha"])
+		elif String(flash["kind"]) == "upgrade":
+			color = Color(0.95, 0.78, 0.28, alpha * projected["alpha"])
+		draw_arc(projected["position"], radius, 0.0, TAU, 48, color, 7.0)
+		draw_circle(projected["position"], 14.0 * projected["scale"], Color(color.r, color.g, color.b, 0.24 * alpha))
 func _draw_player() -> void:
 	var projected: Dictionary = projector.project(state.player_sector, state.player_lane, state.tower_rotation, state.config.sector_count)
 	var position: Vector2 = projected["position"]
