@@ -15,9 +15,12 @@ func _draw() -> void:
 
 	_draw_background()
 	_draw_tower_shell()
+	_draw_front_work_zone()
 	_draw_lane_rings()
+	_draw_rotation_ticks()
 	_draw_sector_guides()
 	_draw_grid_points()
+	_draw_rotation_seam()
 	_draw_vents()
 	_draw_energy_pulses()
 	_draw_pulse_effects()
@@ -41,8 +44,44 @@ func _draw_tower_shell() -> void:
 	_draw_ellipse(bottom_center, projector.radius_x, 76.0, Color(0.18, 0.30, 0.32, 0.72), 6.0, 0.0, TAU)
 	draw_line(Vector2(center.x - projector.radius_x, top_center.y), Vector2(center.x - projector.radius_x, bottom_center.y), Color(0.18, 0.30, 0.32, 0.65), 4.0)
 	draw_line(Vector2(center.x + projector.radius_x, top_center.y), Vector2(center.x + projector.radius_x, bottom_center.y), Color(0.18, 0.30, 0.32, 0.65), 4.0)
+	draw_line(Vector2(center.x, top_center.y - 42.0), Vector2(center.x, bottom_center.y + 34.0), Color(0.43, 0.95, 1.0, 0.32), 18.0)
+	draw_line(Vector2(center.x, top_center.y - 42.0), Vector2(center.x, bottom_center.y + 34.0), Color(0.82, 1.0, 1.0, 0.72), 5.0)
+	for y in [380.0, 508.0, 636.0, 764.0]:
+		_draw_ellipse(Vector2(center.x, y), 42.0, 13.0, Color(0.56, 0.94, 1.0, 0.36), 3.0, 0.0, TAU)
 	_draw_ellipse(Vector2(center.x, 610.0), projector.radius_x + 18.0, 92.0, Color(0.92, 0.82, 0.36, 0.18), 8.0, 0.0, TAU)
 
+func _draw_front_work_zone() -> void:
+	var left_bottom: Dictionary = _project_surface(state.tower_rotation - 0.85, 0)
+	var right_bottom: Dictionary = _project_surface(state.tower_rotation + 0.85, 0)
+	var right_top: Dictionary = _project_surface(state.tower_rotation + 0.85, state.config.lane_count - 1)
+	var left_top: Dictionary = _project_surface(state.tower_rotation - 0.85, state.config.lane_count - 1)
+	var points := PackedVector2Array([left_bottom["position"], right_bottom["position"], right_top["position"], left_top["position"]])
+	draw_colored_polygon(points, Color(0.95, 0.78, 0.28, 0.08))
+	draw_polyline(points, Color(0.95, 0.82, 0.36, 0.34), 2.0, true)
+
+func _draw_rotation_ticks() -> void:
+	for lane in state.config.lane_count:
+		for marker in state.config.sector_count * 2:
+			var sector_value: float = float(marker) * 0.5
+			var projected: Dictionary = _project_surface(sector_value, lane)
+			if not projected["front"]:
+				continue
+			var pos: Vector2 = projected["position"]
+			var scale: float = projected["scale"]
+			var alpha: float = 0.22 + 0.42 * projected["alpha"]
+			var long_tick: bool = marker % 2 == 0
+			var half: float = 13.0 if long_tick else 7.0
+			var width: float = 3.0 if long_tick else 2.0
+			draw_line(pos + Vector2(-half, -5.0) * scale, pos + Vector2(half, 5.0) * scale, Color(0.74, 0.95, 0.92, alpha), width)
+
+func _draw_rotation_seam() -> void:
+	var bottom: Dictionary = _project_surface(0.0, 0)
+	var top: Dictionary = _project_surface(0.0, state.config.lane_count - 1)
+	if not bottom["front"] and not top["front"]:
+		return
+	var alpha: float = 0.32 + 0.42 * maxf(bottom["alpha"], top["alpha"])
+	draw_line(bottom["position"], top["position"], Color(0.95, 0.82, 0.32, alpha), 5.0)
+	draw_circle(top["position"], 9.0 * top["scale"], Color(0.95, 0.82, 0.32, alpha))
 func _draw_lane_rings() -> void:
 	for lane in state.config.lane_count:
 		var lane_y := projector.center.y + projector.base_y - float(lane) * projector.lane_y
@@ -201,6 +240,21 @@ func _draw_result_overlay() -> void:
 	var alpha: float = 0.68 if state.run_status != "running" else 0.34
 	draw_rect(Rect2(Vector2.ZERO, viewport_size), Color(0.02, 0.04, 0.05, alpha))
 
+func _project_surface(sector_value: float, lane: int) -> Dictionary:
+	var angle: float = ((sector_value - state.tower_rotation) / float(state.config.sector_count)) * TAU
+	var side: float = sin(angle)
+	var depth: float = cos(angle)
+	var x: float = projector.center.x + side * projector.radius_x
+	var y: float = projector.center.y + projector.base_y - float(lane) * projector.lane_y - depth * 36.0
+	var scale: float = lerpf(0.62, 1.18, (depth + 1.0) * 0.5)
+	var alpha: float = lerpf(0.18, 1.0, (depth + 1.0) * 0.5)
+	return {
+		"position": Vector2(x, y),
+		"scale": scale,
+		"alpha": alpha,
+		"depth": depth,
+		"front": depth > -0.15
+	}
 func _draw_ellipse(center: Vector2, radius_x: float, radius_y: float, color: Color, width: float, start_angle: float, end_angle: float) -> void:
 	var points := PackedVector2Array()
 	var steps := 72

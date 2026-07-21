@@ -50,6 +50,8 @@
 
 - Added a compact tower radar that shows player position, enemies, vents, lanes, and current camera-facing direction from above.
 
+- Added clear reactor-coil rotation cues: central glowing core, front work-zone highlight, moving surface ticks, and a golden seam marker.
+
 ## Step Log Format
 
 Every meaningful project action should be added here with:
