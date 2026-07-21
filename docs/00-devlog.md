@@ -72,6 +72,8 @@
 
 - Made the reactor body visually solid, added visible upgrade modules/rings on the shell, and introduced procedural audio feedback for shots, damage, repairs, upgrades, and pulse use.
 
+- Removed front-cylinder transparency: visible reactor surface now renders opaque while hidden back-side information stays on the radar.
+
 ## Step Log Format
 
 Every meaningful project action should be added here with:

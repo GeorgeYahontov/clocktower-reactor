@@ -14,11 +14,11 @@ func project(sector: int, lane: int, rotation: float, sector_count: int) -> Dict
 	var x := center.x + side * radius_x
 	var y := center.y + base_y - float(lane) * lane_y - depth * 36.0
 	var scale := lerpf(0.62, 1.18, (depth + 1.0) * 0.5)
-	var alpha := lerpf(0.18, 1.0, (depth + 1.0) * 0.5)
+	var alpha := 1.0
 	return {
 		"position": Vector2(x, y),
 		"scale": scale,
 		"alpha": alpha,
 		"depth": depth,
-		"front": depth > -0.15
+		"front": depth > -0.05
 	}
