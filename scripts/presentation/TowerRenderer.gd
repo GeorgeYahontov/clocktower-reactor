@@ -101,6 +101,16 @@ func _draw_energy_pulses() -> void:
 		var alpha: float = 1.0 - progress
 		draw_circle(projected["position"], radius, Color(0.45, 0.95, 1.0, alpha * projected["alpha"]))
 
+func _draw_pulse_effects() -> void:
+	for pulse in state.pulse_effects:
+		var projected: Dictionary = projector.project(pulse["sector"], pulse["lane"], state.tower_rotation, state.config.sector_count)
+		if not projected["front"]:
+			continue
+		var progress: float = 1.0 - clampf(float(pulse["ttl"]) / float(pulse["life"]), 0.0, 1.0)
+		var radius: float = lerpf(22.0, 118.0, progress) * projected["scale"]
+		var alpha: float = 1.0 - progress
+		draw_arc(projected["position"], radius, 0.0, TAU, 48, Color(0.52, 1.0, 0.78, alpha * projected["alpha"]), 8.0)
+		draw_circle(projected["position"], 18.0 * projected["scale"], Color(0.52, 1.0, 0.78, 0.32 * alpha))
 func _draw_player() -> void:
 	var projected: Dictionary = projector.project(state.player_sector, state.player_lane, state.tower_rotation, state.config.sector_count)
 	var position: Vector2 = projected["position"]

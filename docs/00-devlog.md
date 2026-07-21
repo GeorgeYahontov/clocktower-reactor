@@ -44,6 +44,8 @@
 
 - Added emergency reactor vents: timed hazards that must be repaired by standing on their sector/lane before they damage reactor integrity.
 
+- Added stabilizing pulse active ability on `Space` / right mouse button: it damages nearby enemies, repairs nearby vents, shows a pulse effect, and uses cooldown.
+
 ## Step Log Format
 
 Every meaningful project action should be added here with:

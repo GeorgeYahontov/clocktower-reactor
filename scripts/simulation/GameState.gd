@@ -17,6 +17,7 @@ var reactor_integrity := 0
 var max_reactor_integrity := 0
 var kills := 0
 var repaired_vents := 0
+var pulse_cooldown_remaining := 0.0
 var run_status := "running"
 var pending_upgrade_choices: Array[Dictionary] = []
 var applied_upgrades: Array[String] = []
@@ -24,6 +25,7 @@ var enemies: Array[EnemyModel] = []
 var vents: Array[VentModel] = []
 var shot_traces: Array[Dictionary] = []
 var energy_pulses: Array[Dictionary] = []
+var pulse_effects: Array[Dictionary] = []
 
 var _spawn_timer := 0.0
 var _shot_timer := 0.0
@@ -41,6 +43,7 @@ func setup_new_run() -> void:
 	max_reactor_integrity = config.reactor_integrity
 	kills = 0
 	repaired_vents = 0
+	pulse_cooldown_remaining = 0.0
 	run_status = "running"
 	pending_upgrade_choices.clear()
 	applied_upgrades.clear()
@@ -48,6 +51,7 @@ func setup_new_run() -> void:
 	vents.clear()
 	shot_traces.clear()
 	energy_pulses.clear()
+	pulse_effects.clear()
 	_spawn_timer = 0.2
 	_shot_timer = 0.35
 	_vent_timer = 7.0
@@ -64,6 +68,7 @@ func tick(delta: float) -> void:
 	_spawn_timer -= delta
 	_shot_timer -= delta
 	_vent_timer -= delta
+	pulse_cooldown_remaining = maxf(0.0, pulse_cooldown_remaining - delta)
 
 	if _spawn_timer <= 0.0:
 		_spawn_enemy()
@@ -107,6 +112,37 @@ func rotate_tower(delta_rotation: float) -> void:
 	if run_status != "running":
 		return
 	tower_rotation = wrapf(tower_rotation + delta_rotation, 0.0, float(config.sector_count))
+
+func use_pulse() -> void:
+	if run_status != "running" or not pending_upgrade_choices.is_empty():
+		return
+	if pulse_cooldown_remaining > 0.0:
+		return
+
+	pulse_cooldown_remaining = config.pulse_cooldown
+	pulse_effects.append({
+		"sector": player_sector,
+		"lane": player_lane,
+		"ttl": 0.45,
+		"life": 0.45
+	})
+
+	for enemy in enemies:
+		if _is_within_pulse(enemy.sector, enemy.lane):
+			enemy.hp -= config.pulse_enemy_damage
+			if enemy.hp <= 0:
+				kills += 1
+				energy_pulses.append({
+					"sector": enemy.sector,
+					"lane": enemy.lane,
+					"ttl": 0.42,
+					"life": 0.42
+				})
+				collect_energy(enemy.reward + _energy_bonus())
+
+	for vent in vents:
+		if _is_within_pulse(vent.sector, vent.lane):
+			_repair_vent(vent)
 
 func collect_energy(amount: int) -> void:
 	energy += amount
@@ -219,18 +255,28 @@ func _tick_vents(delta: float) -> void:
 func _resolve_vent_repairs() -> void:
 	for vent in vents:
 		if vent.sector == player_sector and vent.lane == player_lane:
-			vent.active = false
-			repaired_vents += 1
-			energy_pulses.append({
-				"sector": vent.sector,
-				"lane": vent.lane,
-				"ttl": 0.55,
-				"life": 0.55
-			})
-			collect_energy(config.vent_energy_reward)
+			_repair_vent(vent)
 	vents = vents.filter(func(vent: VentModel) -> bool:
 		return vent.active
 	)
+
+func _repair_vent(vent: VentModel) -> void:
+	if not vent.active:
+		return
+	vent.active = false
+	repaired_vents += 1
+	energy_pulses.append({
+		"sector": vent.sector,
+		"lane": vent.lane,
+		"ttl": 0.55,
+		"life": 0.55
+	})
+	collect_energy(config.vent_energy_reward)
+
+func _is_within_pulse(sector: int, lane: int) -> bool:
+	var sector_distance := absi(int(_shortest_sector_distance(float(sector), float(player_sector))))
+	var lane_distance := absi(lane - player_lane)
+	return sector_distance <= config.pulse_sector_radius and lane_distance <= config.pulse_lane_radius
 
 func _tick_effects(delta: float) -> void:
 	for trace in shot_traces:
@@ -242,6 +288,12 @@ func _tick_effects(delta: float) -> void:
 	for pulse in energy_pulses:
 		pulse["ttl"] = float(pulse["ttl"]) - delta
 	energy_pulses = energy_pulses.filter(func(pulse: Dictionary) -> bool:
+		return float(pulse["ttl"]) > 0.0
+	)
+
+	for pulse in pulse_effects:
+		pulse["ttl"] = float(pulse["ttl"]) - delta
+	pulse_effects = pulse_effects.filter(func(pulse: Dictionary) -> bool:
 		return float(pulse["ttl"]) > 0.0
 	)
 

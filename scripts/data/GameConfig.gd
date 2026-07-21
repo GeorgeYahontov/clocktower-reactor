@@ -19,3 +19,8 @@ var vent_spawn_interval := 9.0
 var vent_duration := 8.0
 var vent_damage := 1
 var vent_energy_reward := 1
+
+var pulse_cooldown := 5.0
+var pulse_enemy_damage := 2
+var pulse_sector_radius := 1
+var pulse_lane_radius := 1

@@ -46,6 +46,9 @@ func _unhandled_input(event: InputEvent) -> void:
 				game_state.move_player_sector(1)
 	if event is InputEventMouseButton:
 		var button_event := event as InputEventMouseButton
+		if button_event.button_index == MOUSE_BUTTON_RIGHT and button_event.pressed:
+			game_state.use_pulse()
+			return
 		if button_event.button_index != MOUSE_BUTTON_LEFT:
 			return
 		if button_event.pressed:
@@ -66,6 +69,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			game_state.rotate_tower(-motion_event.relative.x * game_state.config.drag_rotation_sensitivity)
 
 func _handle_preview_input(delta: float) -> void:
+	if Input.is_action_just_pressed("pulse"):
+		game_state.use_pulse()
+
 	var sector_delta := 0
 	if Input.is_action_just_pressed("move_left"):
 		sector_delta -= 1
