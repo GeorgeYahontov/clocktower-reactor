@@ -36,6 +36,46 @@ Still not included:
 - sound
 - real sprites
 
+## Phase 3 Slice
+
+Goal: make the run replayable.
+
+Included:
+
+- level-up choice screen
+- six prototype upgrades
+- upgrade effects applied through simulation state
+- second enemy archetype: slow high-HP bulwark
+- restart button after victory or defeat
+
+Still not included:
+
+- boss event
+- upgrade rarity
+- real balancing pass
+- persistent meta-progression
+- audio feedback
+
+## Phase 3 Slice
+
+Goal: make the run replayable.
+
+Included:
+
+- level-up choice screen
+- six prototype upgrades
+- upgrade effects applied through simulation state
+- second enemy archetype: slow high-HP bulwark
+- restart button after victory or defeat
+
+Still not included:
+
+- boss event
+- upgrade rarity
+- real balancing pass
+- persistent meta-progression
+- audio feedback
+
 ## MVP Loop
 
 1. Player starts on the front face of the reactor.

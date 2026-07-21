@@ -13,6 +13,8 @@ func _ready() -> void:
 	game_state.setup_new_run()
 	tower_renderer.bind(game_state)
 	hud.bind(game_state)
+	hud.upgrade_selected.connect(_on_upgrade_selected)
+	hud.restart_requested.connect(_on_restart_requested)
 
 func _process(delta: float) -> void:
 	_handle_preview_input(delta)
@@ -22,6 +24,8 @@ func _process(delta: float) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if game_state == null:
+		return
+	if not game_state.pending_upgrade_choices.is_empty():
 		return
 
 	if event is InputEventScreenDrag:
@@ -55,3 +59,9 @@ func _handle_preview_input(delta: float) -> void:
 		rotation += 1.0
 	if rotation != 0.0:
 		game_state.rotate_tower(rotation * delta * game_state.config.manual_rotation_speed)
+
+func _on_upgrade_selected(upgrade_id: String) -> void:
+	game_state.apply_upgrade(upgrade_id)
+
+func _on_restart_requested() -> void:
+	game_state.restart()

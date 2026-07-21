@@ -12,3 +12,5 @@ var energy_per_level := 8
 var run_duration := 90.0
 var reactor_integrity := 6
 var enemy_contact_damage := 1
+var upgrade_choice_count := 3
+var lane_target_weight := 1.35

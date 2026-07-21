@@ -3,6 +3,7 @@ class_name GameState
 
 const GameConfig = preload("res://scripts/data/GameConfig.gd")
 const EnemyModel = preload("res://scripts/simulation/EnemyModel.gd")
+const UpgradeCatalog = preload("res://scripts/data/UpgradeCatalog.gd")
 
 var config: GameConfig
 var run_time := 0.0
@@ -12,8 +13,11 @@ var player_lane := 1
 var energy := 0
 var level := 1
 var reactor_integrity := 0
+var max_reactor_integrity := 0
 var kills := 0
 var run_status := "running"
+var pending_upgrade_choices: Array[Dictionary] = []
+var applied_upgrades: Array[String] = []
 var enemies: Array[EnemyModel] = []
 var shot_traces: Array[Dictionary] = []
 var energy_pulses: Array[Dictionary] = []
@@ -30,8 +34,11 @@ func setup_new_run() -> void:
 	energy = 0
 	level = 1
 	reactor_integrity = config.reactor_integrity
+	max_reactor_integrity = config.reactor_integrity
 	kills = 0
 	run_status = "running"
+	pending_upgrade_choices.clear()
+	applied_upgrades.clear()
 	enemies.clear()
 	shot_traces.clear()
 	energy_pulses.clear()
@@ -40,6 +47,9 @@ func setup_new_run() -> void:
 
 func tick(delta: float) -> void:
 	if run_status != "running":
+		_tick_effects(delta)
+		return
+	if not pending_upgrade_choices.is_empty():
 		_tick_effects(delta)
 		return
 
@@ -84,13 +94,35 @@ func collect_energy(amount: int) -> void:
 	if energy >= config.energy_per_level:
 		energy -= config.energy_per_level
 		level += 1
+		pending_upgrade_choices = UpgradeCatalog.pick_choices(config.upgrade_choice_count, level + kills)
+
+func apply_upgrade(upgrade_id: String) -> void:
+	for upgrade in pending_upgrade_choices:
+		if upgrade["id"] != upgrade_id:
+			continue
+		applied_upgrades.append(upgrade_id)
+		_apply_upgrade_effect(upgrade)
+		pending_upgrade_choices.clear()
+		return
+
+func restart() -> void:
+	setup_new_run()
 
 func _spawn_enemy() -> void:
 	var enemy := EnemyModel.new()
 	enemy.sector = randi_range(2, config.sector_count - 3)
 	enemy.lane = randi_range(0, config.lane_count - 1)
-	enemy.hp = 2 + int(run_time / 45.0)
-	enemy.speed = config.enemy_step_speed
+	var heavy_roll := run_time > 20.0 and randi_range(0, 4) == 0
+	if heavy_roll:
+		enemy.kind = "bulwark"
+		enemy.hp = 5 + int(run_time / 40.0)
+		enemy.speed = config.enemy_step_speed * 0.55
+		enemy.reward = 2
+	else:
+		enemy.kind = "runner"
+		enemy.hp = 2 + int(run_time / 45.0)
+		enemy.speed = config.enemy_step_speed + minf(0.35, run_time / 180.0)
+		enemy.reward = 1
 	enemies.append(enemy)
 
 func _auto_fire() -> void:
@@ -102,7 +134,7 @@ func _auto_fire() -> void:
 	for enemy in enemies:
 		var angular_distance := absf(_shortest_sector_distance(float(enemy.sector), float(player_sector)))
 		var lane_distance: int = absi(enemy.lane - player_lane)
-		var score := angular_distance + float(lane_distance) * 1.35
+		var score := angular_distance + float(lane_distance) * config.lane_target_weight
 		if score < best_score:
 			best_score = score
 			target = enemy
@@ -124,7 +156,7 @@ func _auto_fire() -> void:
 			"ttl": 0.42,
 			"life": 0.42
 		})
-		collect_energy(1)
+		collect_energy(target.reward + _energy_bonus())
 
 func _shortest_sector_distance(a: float, b: float) -> float:
 	var half: float = float(config.sector_count) * 0.5
@@ -150,3 +182,27 @@ func _tick_effects(delta: float) -> void:
 	energy_pulses = energy_pulses.filter(func(pulse: Dictionary) -> bool:
 		return float(pulse["ttl"]) > 0.0
 	)
+
+func _apply_upgrade_effect(upgrade: Dictionary) -> void:
+	match upgrade["stat"]:
+		"fire_interval":
+			config.base_fire_interval = maxf(0.12, config.base_fire_interval + float(upgrade["value"]))
+		"lane_weight":
+			config.lane_target_weight = maxf(0.55, config.lane_target_weight + float(upgrade["value"]))
+		"integrity":
+			reactor_integrity = mini(max_reactor_integrity, reactor_integrity + int(upgrade["value"]))
+		"energy_bonus":
+			pass
+		"rotation_speed":
+			config.manual_rotation_speed += float(upgrade["value"])
+			config.drag_rotation_sensitivity += 0.002
+		"max_integrity":
+			max_reactor_integrity += int(upgrade["value"])
+			reactor_integrity += int(upgrade["value"])
+
+func _energy_bonus() -> int:
+	var bonus := 0
+	for upgrade_id in applied_upgrades:
+		if upgrade_id == "charged_cells":
+			bonus += 1
+	return bonus

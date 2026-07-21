@@ -58,8 +58,14 @@ func _draw_enemies() -> void:
 			continue
 		var size: Vector2 = Vector2(30.0, 44.0) * projected["scale"]
 		var pos: Vector2 = projected["position"] - size * 0.5
-		draw_rect(Rect2(pos, size), Color(0.89, 0.34, 0.18, projected["alpha"]), true, 4.0)
-		draw_rect(Rect2(pos, size), Color(1.0, 0.84, 0.32, projected["alpha"]), false, 2.0)
+		if enemy.kind == "bulwark":
+			var bulwark_size: Vector2 = Vector2(42.0, 52.0) * projected["scale"]
+			var bulwark_pos: Vector2 = projected["position"] - bulwark_size * 0.5
+			draw_rect(Rect2(bulwark_pos, bulwark_size), Color(0.46, 0.62, 0.82, projected["alpha"]), true, 5.0)
+			draw_rect(Rect2(bulwark_pos, bulwark_size), Color(0.82, 0.96, 1.0, projected["alpha"]), false, 3.0)
+		else:
+			draw_rect(Rect2(pos, size), Color(0.89, 0.34, 0.18, projected["alpha"]), true, 4.0)
+			draw_rect(Rect2(pos, size), Color(1.0, 0.84, 0.32, projected["alpha"]), false, 2.0)
 
 func _draw_shot_traces() -> void:
 	for trace in state.shot_traces:
@@ -89,7 +95,8 @@ func _draw_player() -> void:
 	draw_arc(position, 42.0 * projected["scale"], -0.8, 0.8, 16, Color(0.95, 0.92, 0.62, 0.45), 5.0)
 
 func _draw_result_overlay() -> void:
-	if state.run_status == "running":
+	if state.run_status == "running" and state.pending_upgrade_choices.is_empty():
 		return
 	var viewport_size: Vector2 = get_viewport_rect().size
-	draw_rect(Rect2(Vector2.ZERO, viewport_size), Color(0.02, 0.04, 0.05, 0.68))
+	var alpha: float = 0.68 if state.run_status != "running" else 0.34
+	draw_rect(Rect2(Vector2.ZERO, viewport_size), Color(0.02, 0.04, 0.05, alpha))

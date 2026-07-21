@@ -5,6 +5,8 @@ var sector := 0
 var lane := 0
 var hp := 2
 var speed := 0.8
+var kind := "runner"
+var reward := 1
 var _step_progress := 0.0
 
 func advance(delta: float, player_sector: int, player_lane: int, sector_count: int) -> void:

@@ -23,6 +23,20 @@
 - Added `Open Clocktower Reactor.bat` so the project can be opened in the Godot editor by double-clicking instead of typing a command.
 - Re-ran Godot 4.7 headless project check successfully after phase 2 changes.
 - Opened the project in the visible Godot editor window.
+- Started phase 3: first replayable loop.
+- Added an `UpgradeCatalog` data layer with six prototype upgrades.
+- Added level-up upgrade choices that pause the run until one option is selected.
+- Added upgrade effects for fire rate, targeting, integrity repair, energy bonus, rotation speed, and max integrity.
+- Added a heavier `bulwark` enemy type that appears after the run has warmed up.
+- Added a restart button for victory/defeat states.
+- Re-ran Godot 4.7 headless project check successfully after phase 3 changes.
+- Started phase 3: first replayable loop.
+- Added an `UpgradeCatalog` data layer with six prototype upgrades.
+- Added level-up upgrade choices that pause the run until one option is selected.
+- Added upgrade effects for fire rate, targeting, integrity repair, energy bonus, rotation speed, and max integrity.
+- Added a heavier `bulwark` enemy type that appears after the run has warmed up.
+- Added a restart button for victory/defeat states.
+- Re-ran Godot 4.7 headless project check successfully after phase 3 changes.
 
 ## Step Log Format
 
