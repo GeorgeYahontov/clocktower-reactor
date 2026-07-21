@@ -68,6 +68,7 @@ func tick(delta: float) -> void:
 	_shot_timer -= delta
 	_vent_timer -= delta
 	pulse_cooldown_remaining = maxf(0.0, pulse_cooldown_remaining - delta)
+	_update_front_sector(delta)
 
 	if _spawn_timer <= 0.0:
 		_spawn_enemy()
@@ -97,10 +98,17 @@ func tick(delta: float) -> void:
 	if run_time >= config.run_duration:
 		run_status = "victory"
 
+func _update_front_sector(delta: float) -> void:
+	rotate_tower(config.auto_rotation_speed * delta)
+	_sync_player_to_front_sector()
+
+func _sync_player_to_front_sector() -> void:
+	player_sector = wrapi(int(round(tower_rotation)), 0, config.sector_count)
 func move_player_sector(delta_sector: int) -> void:
 	if run_status != "running":
 		return
-	player_sector = wrapi(player_sector + delta_sector, 0, config.sector_count)
+	rotate_tower(float(delta_sector) * config.rotation_nudge_amount)
+	_sync_player_to_front_sector()
 
 func move_player_lane(delta_lane: int) -> void:
 	if run_status != "running":
@@ -111,6 +119,7 @@ func rotate_tower(delta_rotation: float) -> void:
 	if run_status != "running":
 		return
 	tower_rotation = wrapf(tower_rotation + delta_rotation, 0.0, float(config.sector_count))
+	_sync_player_to_front_sector()
 
 func use_pulse() -> void:
 	if run_status != "running":
