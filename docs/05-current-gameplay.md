@@ -1,17 +1,17 @@
-# Current Gameplay
+﻿# Current Gameplay
 
-## Controls
+## Controls / Управление
 
 Desktop preview:
 
-- `A` / `D`: change lane
-- `Q` / `E`: rotate tower
+- `A` / `D`: change lane / сменить дорожку
+- `Q` / `E`: rotate tower / вращать башню
 
 Touch preview:
 
-- horizontal drag: rotate tower
-- lower-left tap: move one lane left
-- lower-right tap: move one lane right
+- horizontal drag: rotate tower / свайп влево-вправо вращает башню
+- lower-left tap: move one lane left / тап снизу слева двигает на дорожку влево
+- lower-right tap: move one lane right / тап снизу справа двигает на дорожку вправо
 
 ## Run
 
@@ -20,6 +20,7 @@ Touch preview:
 - Automatic shots target nearby visible threats.
 - Kills grant energy.
 - When energy fills, the run pauses and offers three upgrades.
+- In-game tutorial and controls legend are currently shown in Russian.
 
 ## Current Enemies
 
