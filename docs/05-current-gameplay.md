@@ -1,37 +1,43 @@
-﻿# Current Gameplay
+# Текущий игровой процесс
 
-## Controls / Управление
+## Управление
 
-Desktop preview:
+Клавиатура в Godot Preview:
 
-- `A` / `D`: change lane / сменить дорожку
-- `Q` / `E`: rotate tower / вращать башню
+- `A` / `D`: сменить дорожку.
+- `Q` / `E`: вращать башню.
 
-Touch preview:
+Мышь в Godot Preview:
 
-- horizontal drag: rotate tower / свайп влево-вправо вращает башню
-- lower-left tap: move one lane left / тап снизу слева двигает на дорожку влево
-- lower-right tap: move one lane right / тап снизу справа двигает на дорожку вправо
+- зажать левую кнопку и тянуть влево-вправо: вращать башню;
+- клик снизу слева: сдвинуться на дорожку влево;
+- клик снизу справа: сдвинуться на дорожку вправо.
 
-## Run
+Тач-управление:
 
-- Survive until the timer reaches zero.
-- Enemies that reach the player's lane damage reactor integrity.
-- Automatic shots target nearby visible threats.
-- Kills grant energy.
-- When energy fills, the run pauses and offers three upgrades.
-- In-game tutorial and controls legend are currently shown in Russian.
+- свайп влево-вправо: вращать башню;
+- тап снизу слева: сдвинуться на дорожку влево;
+- тап снизу справа: сдвинуться на дорожку вправо.
 
-## Current Enemies
+## Забег
 
-- Runner: fast, low HP, low reward.
-- Bulwark: slower, higher HP, higher reward, appears after the opening.
+- Нужно выжить до конца таймера.
+- Враги, которые добираются до дорожки игрока, повреждают реактор.
+- Оружие стреляет автоматически по ближайшим видимым угрозам.
+- Убийства дают энергию.
+- Когда энергия заполняется, забег ставится на паузу и предлагает три улучшения.
+- Обучалка и легенда управления сейчас показываются в игре на русском.
 
-## Current Upgrade Hooks
+## Текущие враги
 
-- Faster fire rate
-- Better lane targeting
-- Integrity repair
-- Bonus energy from kills
-- Faster rotation
-- Higher max integrity
+- Runner: быстрый, мало HP, низкая награда.
+- Bulwark: медленнее, больше HP, выше награда, появляется после разогрева забега.
+
+## Текущие улучшения
+
+- Быстрее автоогонь.
+- Лучше таргетинг по дорожкам.
+- Ремонт прочности реактора.
+- Бонус энергии за убийства.
+- Быстрее вращение башни.
+- Больше максимальная прочность реактора.

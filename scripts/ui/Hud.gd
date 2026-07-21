@@ -1,4 +1,4 @@
-extends CanvasLayer
+﻿extends CanvasLayer
 
 signal upgrade_selected(upgrade_id: String)
 signal restart_requested
@@ -69,7 +69,7 @@ func refresh() -> void:
 	elif state.run_status == "defeat":
 		tutorial.text = "Реактор пробит. Враги слишком часто добирались до твоей дорожки."
 	elif state.run_time < 8.0:
-		tutorial.text = "Свайпай влево/вправо, чтобы вращать башню. Тапай нижнюю часть экрана слева или справа, чтобы менять дорожку."
+		tutorial.text = "На ПК зажми левую кнопку мыши и тяни влево/вправо, чтобы вращать башню. Клик снизу слева или справа меняет дорожку."
 	elif state.run_time < 18.0:
 		tutorial.text = "Оружие стреляет автоматически. Держи опасных врагов на видимой стороне башни, чтобы сжечь их быстрее."
 	else:

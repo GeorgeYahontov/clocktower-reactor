@@ -1,4 +1,4 @@
-extends Node2D
+﻿extends Node2D
 
 const GameState = preload("res://scripts/simulation/GameState.gd")
 
@@ -7,6 +7,8 @@ const GameState = preload("res://scripts/simulation/GameState.gd")
 
 var game_state: GameState
 var _touch_dragging := false
+var _mouse_dragging := false
+var _mouse_drag_distance := 0.0
 
 func _ready() -> void:
 	game_state = GameState.new()
@@ -42,6 +44,26 @@ func _unhandled_input(event: InputEvent) -> void:
 				game_state.move_player_lane(-1)
 			else:
 				game_state.move_player_lane(1)
+	if event is InputEventMouseButton:
+		var button_event := event as InputEventMouseButton
+		if button_event.button_index != MOUSE_BUTTON_LEFT:
+			return
+		if button_event.pressed:
+			_mouse_dragging = true
+			_mouse_drag_distance = 0.0
+		else:
+			_mouse_dragging = false
+			if _mouse_drag_distance < 12.0 and button_event.position.y > get_viewport_rect().size.y * 0.68:
+				if button_event.position.x < get_viewport_rect().size.x * 0.5:
+					game_state.move_player_lane(-1)
+				else:
+					game_state.move_player_lane(1)
+
+	if event is InputEventMouseMotion:
+		var motion_event := event as InputEventMouseMotion
+		if _mouse_dragging:
+			_mouse_drag_distance += absf(motion_event.relative.x)
+			game_state.rotate_tower(-motion_event.relative.x * game_state.config.drag_rotation_sensitivity)
 
 func _handle_preview_input(delta: float) -> void:
 	var lane_delta := 0
