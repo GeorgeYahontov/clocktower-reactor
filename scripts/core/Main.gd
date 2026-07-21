@@ -6,6 +6,7 @@ const GameState = preload("res://scripts/simulation/GameState.gd")
 @onready var hud: CanvasLayer = $Hud
 
 var game_state: GameState
+var _touch_dragging := false
 
 func _ready() -> void:
 	game_state = GameState.new()
@@ -18,6 +19,25 @@ func _process(delta: float) -> void:
 	game_state.tick(delta)
 	tower_renderer.queue_redraw()
 	hud.refresh()
+
+func _unhandled_input(event: InputEvent) -> void:
+	if game_state == null:
+		return
+
+	if event is InputEventScreenDrag:
+		var drag_event := event as InputEventScreenDrag
+		_touch_dragging = true
+		game_state.rotate_tower(-drag_event.relative.x * game_state.config.drag_rotation_sensitivity)
+
+	if event is InputEventScreenTouch:
+		var touch_event := event as InputEventScreenTouch
+		if touch_event.pressed:
+			_touch_dragging = false
+		elif not _touch_dragging and touch_event.position.y > get_viewport_rect().size.y * 0.68:
+			if touch_event.position.x < get_viewport_rect().size.x * 0.5:
+				game_state.move_player_lane(-1)
+			else:
+				game_state.move_player_lane(1)
 
 func _handle_preview_input(delta: float) -> void:
 	var lane_delta := 0

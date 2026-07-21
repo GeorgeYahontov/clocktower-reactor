@@ -15,6 +15,14 @@
 - Ran Godot 4.7 headless project check. First pass found strict GDScript typing issues.
 - Fixed GDScript typing issues in simulation and presentation layers.
 - Re-ran Godot headless project check successfully with no script errors.
+- Started phase 2: converting the scaffold into a touchable first run.
+- Added mobile-style touch controls: horizontal drag rotates the tower, lower-screen taps change lanes.
+- Added run state: reactor integrity, kill count, victory after the run timer, defeat when integrity reaches zero.
+- Added visible shot traces and energy pulse effects so automatic combat is readable.
+- Added tutorial/status HUD text for the first prototype run.
+- Added `Open Clocktower Reactor.bat` so the project can be opened in the Godot editor by double-clicking instead of typing a command.
+- Re-ran Godot 4.7 headless project check successfully after phase 2 changes.
+- Opened the project in the visible Godot editor window.
 
 ## Step Log Format
 

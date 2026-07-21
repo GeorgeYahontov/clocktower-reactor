@@ -13,6 +13,29 @@ Build a 3-minute run that proves:
 - auto-fire gives constant action with low input burden
 - progress is clear through energy, level-ups, and one boss beat
 
+## Phase 2 Slice
+
+Goal: make the prototype touchable and readable.
+
+Included:
+
+- touch drag tower rotation
+- lower-screen lane taps
+- visible automatic weapon traces
+- energy pulse feedback on kills
+- reactor integrity
+- kill counter
+- simple victory/defeat state
+- short tutorial HUD copy
+
+Still not included:
+
+- upgrade picker
+- boss
+- polished mobile UI art
+- sound
+- real sprites
+
 ## MVP Loop
 
 1. Player starts on the front face of the reactor.

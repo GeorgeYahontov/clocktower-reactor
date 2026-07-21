@@ -40,6 +40,12 @@ This matches the published 64-bit Windows checksum from the package verification
 
 ## Run Locally
 
+For normal use, double-click:
+
+`Open Clocktower Reactor.bat`
+
+This opens the project directly in the Godot editor.
+
 From the project folder:
 
 `tools\godot-4.7-stable\Godot_v4.7-stable_win64.exe --path .`

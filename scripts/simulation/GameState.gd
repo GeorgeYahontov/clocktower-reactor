@@ -11,7 +11,12 @@ var player_sector := 0
 var player_lane := 1
 var energy := 0
 var level := 1
+var reactor_integrity := 0
+var kills := 0
+var run_status := "running"
 var enemies: Array[EnemyModel] = []
+var shot_traces: Array[Dictionary] = []
+var energy_pulses: Array[Dictionary] = []
 
 var _spawn_timer := 0.0
 var _shot_timer := 0.0
@@ -24,11 +29,20 @@ func setup_new_run() -> void:
 	player_lane = 1
 	energy = 0
 	level = 1
+	reactor_integrity = config.reactor_integrity
+	kills = 0
+	run_status = "running"
 	enemies.clear()
+	shot_traces.clear()
+	energy_pulses.clear()
 	_spawn_timer = 0.2
 	_shot_timer = 0.35
 
 func tick(delta: float) -> void:
+	if run_status != "running":
+		_tick_effects(delta)
+		return
+
 	run_time += delta
 	_spawn_timer -= delta
 	_shot_timer -= delta
@@ -44,14 +58,25 @@ func tick(delta: float) -> void:
 	for enemy in enemies:
 		enemy.advance(delta, player_sector, player_lane, config.sector_count)
 
+	_resolve_contacts()
+
 	enemies = enemies.filter(func(enemy: EnemyModel) -> bool:
 		return enemy.hp > 0
 	)
 
+	_tick_effects(delta)
+
+	if run_time >= config.run_duration:
+		run_status = "victory"
+
 func move_player_lane(delta_lane: int) -> void:
+	if run_status != "running":
+		return
 	player_lane = clampi(player_lane + delta_lane, 0, config.lane_count - 1)
 
 func rotate_tower(delta_rotation: float) -> void:
+	if run_status != "running":
+		return
 	tower_rotation = wrapf(tower_rotation + delta_rotation, 0.0, float(config.sector_count))
 
 func collect_energy(amount: int) -> void:
@@ -83,9 +108,45 @@ func _auto_fire() -> void:
 			target = enemy
 
 	target.hp -= 1
+	shot_traces.append({
+		"from_sector": player_sector,
+		"from_lane": player_lane,
+		"to_sector": target.sector,
+		"to_lane": target.lane,
+		"ttl": 0.12,
+		"life": 0.12
+	})
 	if target.hp <= 0:
+		kills += 1
+		energy_pulses.append({
+			"sector": target.sector,
+			"lane": target.lane,
+			"ttl": 0.42,
+			"life": 0.42
+		})
 		collect_energy(1)
 
 func _shortest_sector_distance(a: float, b: float) -> float:
 	var half: float = float(config.sector_count) * 0.5
 	return wrapf(a - b + half, 0.0, float(config.sector_count)) - half
+
+func _resolve_contacts() -> void:
+	for enemy in enemies:
+		if enemy.sector == player_sector and enemy.lane == player_lane:
+			enemy.hp = 0
+			reactor_integrity -= config.enemy_contact_damage
+			if reactor_integrity <= 0:
+				run_status = "defeat"
+
+func _tick_effects(delta: float) -> void:
+	for trace in shot_traces:
+		trace["ttl"] = float(trace["ttl"]) - delta
+	shot_traces = shot_traces.filter(func(trace: Dictionary) -> bool:
+		return float(trace["ttl"]) > 0.0
+	)
+
+	for pulse in energy_pulses:
+		pulse["ttl"] = float(pulse["ttl"]) - delta
+	energy_pulses = energy_pulses.filter(func(pulse: Dictionary) -> bool:
+		return float(pulse["ttl"]) > 0.0
+	)

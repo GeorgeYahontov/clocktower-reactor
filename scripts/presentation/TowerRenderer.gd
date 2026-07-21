@@ -16,8 +16,11 @@ func _draw() -> void:
 	_draw_background()
 	_draw_tower_shell()
 	_draw_grid_points()
+	_draw_energy_pulses()
+	_draw_shot_traces()
 	_draw_enemies()
 	_draw_player()
+	_draw_result_overlay()
 
 func _draw_background() -> void:
 	draw_rect(Rect2(Vector2.ZERO, get_viewport_rect().size), Color("#101820"))
@@ -58,9 +61,35 @@ func _draw_enemies() -> void:
 		draw_rect(Rect2(pos, size), Color(0.89, 0.34, 0.18, projected["alpha"]), true, 4.0)
 		draw_rect(Rect2(pos, size), Color(1.0, 0.84, 0.32, projected["alpha"]), false, 2.0)
 
+func _draw_shot_traces() -> void:
+	for trace in state.shot_traces:
+		var start_projected: Dictionary = projector.project(trace["from_sector"], trace["from_lane"], state.tower_rotation, state.config.sector_count)
+		var end_projected: Dictionary = projector.project(trace["to_sector"], trace["to_lane"], state.tower_rotation, state.config.sector_count)
+		if not start_projected["front"] or not end_projected["front"]:
+			continue
+		var progress: float = clampf(float(trace["ttl"]) / float(trace["life"]), 0.0, 1.0)
+		draw_line(start_projected["position"], end_projected["position"], Color(0.45, 0.95, 1.0, progress), 5.0)
+		draw_circle(end_projected["position"], 12.0 * end_projected["scale"], Color(1.0, 0.95, 0.45, progress))
+
+func _draw_energy_pulses() -> void:
+	for pulse in state.energy_pulses:
+		var projected: Dictionary = projector.project(pulse["sector"], pulse["lane"], state.tower_rotation, state.config.sector_count)
+		if not projected["front"]:
+			continue
+		var progress: float = 1.0 - clampf(float(pulse["ttl"]) / float(pulse["life"]), 0.0, 1.0)
+		var radius: float = lerpf(8.0, 34.0, progress) * projected["scale"]
+		var alpha: float = 1.0 - progress
+		draw_circle(projected["position"], radius, Color(0.45, 0.95, 1.0, alpha * projected["alpha"]))
+
 func _draw_player() -> void:
 	var projected: Dictionary = projector.project(state.player_sector, state.player_lane, state.tower_rotation, state.config.sector_count)
 	var position: Vector2 = projected["position"]
 	draw_circle(position, 28.0 * projected["scale"], Color("#f2c14e"))
 	draw_circle(position + Vector2(0.0, -8.0), 10.0 * projected["scale"], Color("#101820"))
 	draw_arc(position, 42.0 * projected["scale"], -0.8, 0.8, 16, Color(0.95, 0.92, 0.62, 0.45), 5.0)
+
+func _draw_result_overlay() -> void:
+	if state.run_status == "running":
+		return
+	var viewport_size: Vector2 = get_viewport_rect().size
+	draw_rect(Rect2(Vector2.ZERO, viewport_size), Color(0.02, 0.04, 0.05, 0.68))
