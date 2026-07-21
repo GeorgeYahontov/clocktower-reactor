@@ -70,6 +70,8 @@
 
 - Reverted the visual experiment back toward pseudo-3D and added Reactor Autopilot: automatic rotation, front-sector sync, and rotation nudges instead of manual sector walking.
 
+- Made the reactor body visually solid, added visible upgrade modules/rings on the shell, and introduced procedural audio feedback for shots, damage, repairs, upgrades, and pulse use.
+
 ## Step Log Format
 
 Every meaningful project action should be added here with:

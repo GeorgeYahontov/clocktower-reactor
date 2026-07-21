@@ -4,6 +4,7 @@ const GameState = preload("res://scripts/simulation/GameState.gd")
 
 @onready var tower_renderer: Node2D = $TowerRenderer
 @onready var hud: CanvasLayer = $Hud
+@onready var audio_feedback: Node = $AudioFeedback
 
 var game_state: GameState
 var _touch_dragging := false
@@ -15,6 +16,7 @@ func _ready() -> void:
 	game_state.setup_new_run()
 	tower_renderer.bind(game_state)
 	hud.bind(game_state)
+	audio_feedback.bind(game_state)
 	hud.upgrade_selected.connect(_on_upgrade_selected)
 	hud.restart_requested.connect(_on_restart_requested)
 
@@ -23,6 +25,7 @@ func _process(delta: float) -> void:
 	game_state.tick(delta)
 	tower_renderer.queue_redraw()
 	hud.refresh()
+	audio_feedback.update()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if game_state == null:

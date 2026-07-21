@@ -17,6 +17,7 @@ func _draw() -> void:
 	_draw_touch_zones()
 	_draw_reactor_status_glow()
 	_draw_tower_shell()
+	_draw_reactor_upgrade_modules()
 	_draw_lane_rings()
 	_draw_rotation_ticks()
 	_draw_sector_guides()
@@ -74,12 +75,44 @@ func _draw_reactor_status_glow() -> void:
 		draw_line(Vector2(34.0, 1114.0), Vector2(viewport_size.x - 34.0, 1114.0), Color(0.95, 0.82, 0.36, 0.34), 3.0)
 func _draw_tower_shell() -> void:
 	var center: Vector2 = projector.center
-	var top_y := 344.0
-	var bottom_y := 882.0
-	draw_line(Vector2(center.x, top_y), Vector2(center.x, bottom_y), Color(0.43, 0.95, 1.0, 0.20), 16.0)
-	draw_line(Vector2(center.x, top_y), Vector2(center.x, bottom_y), Color(0.82, 1.0, 1.0, 0.58), 4.0)
+	var top_center := Vector2(center.x, 344.0)
+	var bottom_center := Vector2(center.x, 882.0)
+	var body_points := PackedVector2Array([
+		Vector2(center.x - projector.radius_x, top_center.y),
+		Vector2(center.x + projector.radius_x, top_center.y),
+		Vector2(center.x + projector.radius_x + 18.0, bottom_center.y),
+		Vector2(center.x - projector.radius_x - 18.0, bottom_center.y)
+	])
+	draw_colored_polygon(body_points, Color(0.045, 0.095, 0.105, 0.98))
+	_draw_ellipse(top_center, projector.radius_x, 54.0, Color(0.18, 0.36, 0.38, 0.92), 8.0, 0.0, TAU)
+	_draw_ellipse(bottom_center, projector.radius_x + 18.0, 66.0, Color(0.12, 0.26, 0.28, 0.96), 8.0, 0.0, TAU)
+	draw_line(Vector2(center.x - projector.radius_x, top_center.y), Vector2(center.x - projector.radius_x - 18.0, bottom_center.y), Color(0.22, 0.43, 0.45, 0.92), 6.0)
+	draw_line(Vector2(center.x + projector.radius_x, top_center.y), Vector2(center.x + projector.radius_x + 18.0, bottom_center.y), Color(0.22, 0.43, 0.45, 0.92), 6.0)
+	draw_line(Vector2(center.x, top_center.y), Vector2(center.x, bottom_center.y), Color(0.43, 0.95, 1.0, 0.26), 24.0)
+	draw_line(Vector2(center.x, top_center.y), Vector2(center.x, bottom_center.y), Color(0.82, 1.0, 1.0, 0.72), 5.0)
 	for y in [392.0, 520.0, 648.0, 776.0]:
-		_draw_ellipse(Vector2(center.x, y), 34.0, 10.0, Color(0.56, 0.94, 1.0, 0.28), 2.0, 0.0, TAU)
+		_draw_ellipse(Vector2(center.x, y), 38.0, 11.0, Color(0.56, 0.94, 1.0, 0.38), 3.0, 0.0, TAU)
+
+func _draw_reactor_upgrade_modules() -> void:
+	var count: int = state.applied_upgrades.size()
+	if count <= 0:
+		return
+	var center: Vector2 = projector.center
+	var max_modules: int = mini(count, 8)
+	for i in max_modules:
+		var side := -1.0 if i % 2 == 0 else 1.0
+		var row := int(i / 2)
+		var y := 396.0 + float(row) * 108.0
+		var x := center.x + side * (projector.radius_x + 34.0)
+		var module_rect := Rect2(Vector2(x - 20.0, y - 24.0), Vector2(40.0, 48.0))
+		draw_rect(module_rect, Color(0.10, 0.20, 0.21, 0.96), true)
+		draw_rect(module_rect, Color(0.92, 0.78, 0.32, 0.75), false, 3.0)
+		draw_line(Vector2(x - side * 20.0, y), Vector2(center.x + side * 46.0, y), Color(0.92, 0.78, 0.32, 0.42), 3.0)
+		draw_circle(Vector2(x, y), 7.0, Color(0.95, 0.84, 0.42, 0.86))
+	if count >= 3:
+		_draw_ellipse(Vector2(center.x, 610.0), projector.radius_x + 30.0, 88.0, Color(0.92, 0.78, 0.32, 0.32), 6.0, 0.0, TAU)
+	if count >= 6:
+		_draw_ellipse(Vector2(center.x, 610.0), projector.radius_x + 52.0, 104.0, Color(0.50, 1.0, 0.76, 0.26), 6.0, 0.0, TAU)
 
 func _draw_rotation_ticks() -> void:
 	for lane in state.config.lane_count:
@@ -90,7 +123,7 @@ func _draw_rotation_ticks() -> void:
 				continue
 			var pos: Vector2 = projected["position"]
 			var scale: float = projected["scale"]
-			var alpha: float = 0.22 + 0.42 * projected["alpha"]
+			var alpha: float = 0.36 + 0.46 * projected["alpha"]
 			var long_tick: bool = marker % 2 == 0
 			var half: float = 13.0 if long_tick else 7.0
 			var width: float = 3.0 if long_tick else 2.0
@@ -107,8 +140,8 @@ func _draw_rotation_seam() -> void:
 func _draw_lane_rings() -> void:
 	for lane in state.config.lane_count:
 		var lane_y := projector.center.y + projector.base_y - float(lane) * projector.lane_y
-		var alpha := 0.34 + float(lane) * 0.07
-		_draw_ellipse(Vector2(projector.center.x, lane_y), projector.radius_x, 46.0, Color(0.30, 0.56, 0.58, alpha), 3.0, 0.0, TAU)
+		var alpha := 0.58 + float(lane) * 0.08
+		_draw_ellipse(Vector2(projector.center.x, lane_y), projector.radius_x, 46.0, Color(0.36, 0.68, 0.68, alpha), 3.0, 0.0, TAU)
 
 func _draw_sector_guides() -> void:
 	for sector in state.config.sector_count:
@@ -125,8 +158,8 @@ func _draw_grid_points() -> void:
 			var projected: Dictionary = projector.project(sector, lane, state.tower_rotation, state.config.sector_count)
 			if not projected["front"]:
 				continue
-			var color := Color(0.30, 0.46, 0.48, 0.30 * projected["alpha"])
-			draw_circle(projected["position"], 6.0 * projected["scale"], color)
+			var color := Color(0.38, 0.62, 0.62, 0.46 * projected["alpha"])
+			draw_circle(projected["position"], 7.0 * projected["scale"], color)
 
 func _draw_vents() -> void:
 	for vent in state.vents:
@@ -163,7 +196,7 @@ func _draw_enemies() -> void:
 func _draw_runner(projected: Dictionary) -> void:
 	var size: Vector2 = Vector2(30.0, 44.0) * projected["scale"]
 	var pos: Vector2 = projected["position"] - size * 0.5
-	draw_rect(Rect2(pos, size), Color(0.89, 0.34, 0.18, projected["alpha"]), true, 4.0)
+	draw_rect(Rect2(pos, size), Color(0.89, 0.34, 0.18, projected["alpha"]), true)
 	draw_rect(Rect2(pos, size), Color(1.0, 0.84, 0.32, projected["alpha"]), false, 2.0)
 	draw_line(projected["position"] + Vector2(-8, -4) * projected["scale"], projected["position"] + Vector2(8, -4) * projected["scale"], Color(0.10, 0.06, 0.04, projected["alpha"]), 3.0)
 

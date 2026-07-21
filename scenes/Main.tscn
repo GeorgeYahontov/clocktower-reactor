@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3 uid="uid://clocktowerreactormain"]
+[gd_scene load_steps=5 format=3 uid="uid://clocktowerreactormain"]
 
 [ext_resource type="Script" path="res://scripts/core/Main.gd" id="1_main"]
 [ext_resource type="Script" path="res://scripts/presentation/TowerRenderer.gd" id="2_tower"]
 [ext_resource type="Script" path="res://scripts/ui/Hud.gd" id="3_hud"]
+[ext_resource type="Script" path="res://scripts/audio/AudioFeedback.gd" id="4_audio"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_main")
@@ -12,3 +13,6 @@ script = ExtResource("2_tower")
 
 [node name="Hud" type="CanvasLayer" parent="."]
 script = ExtResource("3_hud")
+
+[node name="AudioFeedback" type="Node" parent="."]
+script = ExtResource("4_audio")
