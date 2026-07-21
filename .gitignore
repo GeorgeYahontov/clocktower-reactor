@@ -1,0 +1,12 @@
+# Godot imports/cache
+.godot/
+*.import
+
+# Local portable tools
+tools/godot-4.7-stable/*.zip
+tools/godot-4.7-stable/*.exe
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+*.tmp
