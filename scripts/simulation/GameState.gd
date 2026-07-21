@@ -3,6 +3,7 @@ class_name GameState
 
 const GameConfig = preload("res://scripts/data/GameConfig.gd")
 const EnemyModel = preload("res://scripts/simulation/EnemyModel.gd")
+const VentModel = preload("res://scripts/simulation/VentModel.gd")
 const UpgradeCatalog = preload("res://scripts/data/UpgradeCatalog.gd")
 
 var config: GameConfig
@@ -15,15 +16,18 @@ var level := 1
 var reactor_integrity := 0
 var max_reactor_integrity := 0
 var kills := 0
+var repaired_vents := 0
 var run_status := "running"
 var pending_upgrade_choices: Array[Dictionary] = []
 var applied_upgrades: Array[String] = []
 var enemies: Array[EnemyModel] = []
+var vents: Array[VentModel] = []
 var shot_traces: Array[Dictionary] = []
 var energy_pulses: Array[Dictionary] = []
 
 var _spawn_timer := 0.0
 var _shot_timer := 0.0
+var _vent_timer := 0.0
 
 func setup_new_run() -> void:
 	config = GameConfig.new()
@@ -36,14 +40,17 @@ func setup_new_run() -> void:
 	reactor_integrity = config.reactor_integrity
 	max_reactor_integrity = config.reactor_integrity
 	kills = 0
+	repaired_vents = 0
 	run_status = "running"
 	pending_upgrade_choices.clear()
 	applied_upgrades.clear()
 	enemies.clear()
+	vents.clear()
 	shot_traces.clear()
 	energy_pulses.clear()
 	_spawn_timer = 0.2
 	_shot_timer = 0.35
+	_vent_timer = 7.0
 
 func tick(delta: float) -> void:
 	if run_status != "running":
@@ -56,6 +63,7 @@ func tick(delta: float) -> void:
 	run_time += delta
 	_spawn_timer -= delta
 	_shot_timer -= delta
+	_vent_timer -= delta
 
 	if _spawn_timer <= 0.0:
 		_spawn_enemy()
@@ -65,10 +73,16 @@ func tick(delta: float) -> void:
 		_auto_fire()
 		_shot_timer = config.base_fire_interval
 
+	if _vent_timer <= 0.0:
+		_spawn_vent()
+		_vent_timer = maxf(5.0, config.vent_spawn_interval - run_time * 0.025)
+
 	for enemy in enemies:
 		enemy.advance(delta, player_sector, player_lane, config.sector_count)
 
 	_resolve_contacts()
+	_tick_vents(delta)
+	_resolve_vent_repairs()
 
 	enemies = enemies.filter(func(enemy: EnemyModel) -> bool:
 		return enemy.hp > 0
@@ -112,6 +126,18 @@ func apply_upgrade(upgrade_id: String) -> void:
 
 func restart() -> void:
 	setup_new_run()
+
+func _spawn_vent() -> void:
+	if run_time < 6.0:
+		return
+	var vent := VentModel.new()
+	var offset := randi_range(1, config.sector_count - 2)
+	if randi_range(0, 1) == 0:
+		offset = -offset
+	var sector := wrapi(player_sector + offset, 0, config.sector_count)
+	var lane := randi_range(0, config.lane_count - 1)
+	vent.setup(sector, lane, config.vent_duration)
+	vents.append(vent)
 
 func _spawn_enemy() -> void:
 	var enemy := EnemyModel.new()
@@ -177,6 +203,34 @@ func _resolve_contacts() -> void:
 			reactor_integrity -= config.enemy_contact_damage
 			if reactor_integrity <= 0:
 				run_status = "defeat"
+
+func _tick_vents(delta: float) -> void:
+	for vent in vents:
+		vent.tick(delta)
+		if not vent.active and vent.ttl <= 0.0:
+			reactor_integrity -= config.vent_damage
+			vent.ttl = 999.0
+			if reactor_integrity <= 0:
+				run_status = "defeat"
+	vents = vents.filter(func(vent: VentModel) -> bool:
+		return vent.active
+	)
+
+func _resolve_vent_repairs() -> void:
+	for vent in vents:
+		if vent.sector == player_sector and vent.lane == player_lane:
+			vent.active = false
+			repaired_vents += 1
+			energy_pulses.append({
+				"sector": vent.sector,
+				"lane": vent.lane,
+				"ttl": 0.55,
+				"life": 0.55
+			})
+			collect_energy(config.vent_energy_reward)
+	vents = vents.filter(func(vent: VentModel) -> bool:
+		return vent.active
+	)
 
 func _tick_effects(delta: float) -> void:
 	for trace in shot_traces:

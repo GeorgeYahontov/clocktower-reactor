@@ -1,4 +1,4 @@
-extends Node2D
+﻿extends Node2D
 
 const CylinderProjector = preload("res://scripts/presentation/CylinderProjector.gd")
 
@@ -16,6 +16,7 @@ func _draw() -> void:
 	_draw_background()
 	_draw_tower_shell()
 	_draw_grid_points()
+	_draw_vents()
 	_draw_energy_pulses()
 	_draw_shot_traces()
 	_draw_enemies()
@@ -44,6 +45,19 @@ func _draw_grid_points() -> void:
 			var color := Color(0.30, 0.46, 0.48, 0.35 * projected["alpha"])
 			draw_circle(projected["position"], 7.0 * projected["scale"], color)
 
+func _draw_vents() -> void:
+	for vent in state.vents:
+		var projected: Dictionary = projector.project(vent.sector, vent.lane, state.tower_rotation, state.config.sector_count)
+		if not projected["front"]:
+			continue
+		var urgency: float = vent.urgency()
+		var radius: float = lerpf(16.0, 32.0, urgency) * projected["scale"]
+		var color := Color(0.85, 0.22, 1.0, projected["alpha"])
+		var warning := Color(1.0, 0.92, 0.24, projected["alpha"])
+		draw_circle(projected["position"], radius, Color(color.r, color.g, color.b, 0.25 * projected["alpha"]))
+		draw_arc(projected["position"], radius, 0.0, TAU * maxf(0.05, vent.ttl / vent.life), 28, warning, 4.0)
+		draw_line(projected["position"] + Vector2(-radius * 0.55, 0.0), projected["position"] + Vector2(radius * 0.55, 0.0), color, 4.0)
+		draw_line(projected["position"] + Vector2(0.0, -radius * 0.55), projected["position"] + Vector2(0.0, radius * 0.55), color, 4.0)
 func _draw_enemies() -> void:
 	var sorted: Array = state.enemies.duplicate()
 	sorted.sort_custom(func(a, b) -> bool:

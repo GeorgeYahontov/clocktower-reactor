@@ -42,6 +42,8 @@
 
 - Changed desktop/player movement so `A/D` walk around tower sectors, `W/S` change lanes, and `Q/E` or mouse drag rotate the tower.
 
+- Added emergency reactor vents: timed hazards that must be repaired by standing on their sector/lane before they damage reactor integrity.
+
 ## Step Log Format
 
 Every meaningful project action should be added here with:

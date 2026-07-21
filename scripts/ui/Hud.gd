@@ -22,7 +22,7 @@ func bind(game_state) -> void:
 	controls_legend.size = Vector2(314.0, 190.0)
 	controls_legend.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	controls_legend.add_theme_font_size_override("font_size", 20)
-	controls_legend.text = "Управление\nA/D: дорожка\nQ/E: вращать башню\nТач: свайп - вращать\nНиз экрана: влево/вправо"
+	controls_legend.text = "Управление\nA/D: шаг по башне\nW/S: дорожка вверх/вниз\nQ/E: вращать башню\nМышь: тянуть = вращать\nКлик снизу: шаг влево/вправо"
 	add_child(controls_legend)
 
 	tutorial = Label.new()
@@ -53,13 +53,14 @@ func refresh() -> void:
 	if state == null or label == null:
 		return
 	var time_left: float = maxf(0.0, state.config.run_duration - state.run_time)
-	label.text = "Clocktower Reactor\nВремя: %.0f\nУровень: %d\nЭнергия: %d/%d\nРеактор: %d\nУбийства: %d" % [
+	label.text = "Clocktower Reactor\nВремя: %.0f\nУровень: %d\nЭнергия: %d/%d\nРеактор: %d\nУбийства: %d\nВентили: %d" % [
 		time_left,
 		state.level,
 		state.energy,
 		state.config.energy_per_level,
 		state.reactor_integrity,
-		state.kills
+		state.kills,
+		state.repaired_vents
 	]
 
 	if tutorial == null:
@@ -73,7 +74,7 @@ func refresh() -> void:
 	elif state.run_time < 18.0:
 		tutorial.text = "Оружие стреляет автоматически. Держи опасных врагов на видимой стороне башни, чтобы сжечь их быстрее."
 	else:
-		tutorial.text = "Выживи до конца таймера. Когда энергия заполнится, выбери улучшение реактора."
+		tutorial.text = "Выживи до конца таймера. Закрывай аварийные вентили, встав на их сектор и дорожку."
 
 	_refresh_upgrade_panel()
 	restart_button.visible = state.run_status != "running"
