@@ -74,6 +74,8 @@
 
 - Removed front-cylinder transparency: visible reactor surface now renders opaque while hidden back-side information stays on the radar.
 
+- Recorded UX cleanup TODOs from playtest screenshot: reduce first-screen clutter, clarify the front work zone, compact upgrades/HUD, and add mobile viewport checks.
+
 ## Step Log Format
 
 Every meaningful project action should be added here with:
