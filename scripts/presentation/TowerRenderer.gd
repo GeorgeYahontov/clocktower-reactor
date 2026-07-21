@@ -1,4 +1,4 @@
-﻿extends Node2D
+extends Node2D
 
 const CylinderProjector = preload("res://scripts/presentation/CylinderProjector.gd")
 
@@ -24,6 +24,7 @@ func _draw() -> void:
 	_draw_shot_traces()
 	_draw_enemies()
 	_draw_player()
+	_draw_radar()
 	_draw_result_overlay()
 
 func _draw_background() -> void:
@@ -159,6 +160,40 @@ func _draw_player() -> void:
 	draw_circle(position + Vector2(0.0, -8.0), 10.0 * projected["scale"], Color("#101820"))
 	draw_arc(position, 46.0 * projected["scale"], -0.8, 0.8, 16, Color(0.95, 0.92, 0.62, 0.45), 5.0)
 
+func _draw_radar() -> void:
+	var sector_count: int = state.config.sector_count
+	var center := Vector2(612.0, 560.0)
+	var radius := 58.0
+	draw_circle(center, radius + 12.0, Color(0.04, 0.08, 0.09, 0.72))
+	draw_arc(center, radius, 0.0, TAU, 72, Color(0.38, 0.66, 0.66, 0.72), 3.0)
+	draw_arc(center, radius * 0.58, 0.0, TAU, 72, Color(0.26, 0.45, 0.45, 0.42), 2.0)
+	draw_line(center + Vector2(0.0, -radius - 8.0), center + Vector2(0.0, -radius + 10.0), Color(0.95, 0.86, 0.38, 0.95), 4.0)
+	for sector in sector_count:
+		var sector_angle := _radar_angle(sector, sector_count)
+		var edge := center + Vector2(cos(sector_angle), sin(sector_angle)) * radius
+		draw_line(center + (edge - center).normalized() * (radius - 7.0), edge, Color(0.35, 0.56, 0.56, 0.35), 1.0)
+
+	for vent in state.vents:
+		var pos := _radar_position(center, radius, vent.sector, vent.lane, sector_count)
+		draw_circle(pos, 5.5, Color(0.90, 0.18, 1.0, 0.95))
+		draw_circle(pos, 8.0, Color(0.90, 0.18, 1.0, 0.22))
+
+	for enemy in state.enemies:
+		var pos := _radar_position(center, radius, enemy.sector, enemy.lane, sector_count)
+		var color := Color(0.35, 0.58, 0.86, 0.95) if enemy.kind == "bulwark" else Color(0.92, 0.36, 0.18, 0.95)
+		draw_circle(pos, 4.2, color)
+
+	var player_pos := _radar_position(center, radius, state.player_sector, state.player_lane, sector_count)
+	draw_circle(player_pos, 7.0, Color(0.95, 0.76, 0.31, 1.0))
+	draw_circle(player_pos, 10.0, Color(0.95, 0.76, 0.31, 0.22))
+
+func _radar_position(center: Vector2, radius: float, sector: int, lane: int, sector_count: int) -> Vector2:
+	var angle := _radar_angle(sector, sector_count)
+	var lane_ratio := 0.42 + (float(lane) / maxf(1.0, float(state.config.lane_count - 1))) * 0.48
+	return center + Vector2(cos(angle), sin(angle)) * radius * lane_ratio
+
+func _radar_angle(sector: int, sector_count: int) -> float:
+	return ((float(sector) - state.tower_rotation) / float(sector_count)) * TAU - PI * 0.5
 func _draw_result_overlay() -> void:
 	if state.run_status == "running" and state.pending_upgrade_choices.is_empty():
 		return

@@ -1,4 +1,4 @@
-﻿# Devlog
+# Devlog
 
 ## 2026-07-21
 
@@ -47,6 +47,8 @@
 - Added stabilizing pulse active ability on `Space` / right mouse button: it damages nearby enemies, repairs nearby vents, shows a pulse effect, and uses cooldown.
 
 - Improved gameplay readability: explained vents/heavy enemies in HUD, added upgrade icons, and redrew the tower with lane rings, sector guides, visible front band, and clearer enemy/vent shapes.
+
+- Added a compact tower radar that shows player position, enemies, vents, lanes, and current camera-facing direction from above.
 
 ## Step Log Format
 

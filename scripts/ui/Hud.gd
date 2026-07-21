@@ -1,4 +1,4 @@
-﻿extends CanvasLayer
+extends CanvasLayer
 
 signal upgrade_selected(upgrade_id: String)
 signal restart_requested
