@@ -64,6 +64,8 @@
 
 - Reduced visual clutter: removed the always-visible translucent cylinder shell and moved controls/legend text into a compact ? help menu.
 
+- Converted the top HUD into a compact instrument panel with energy, reactor integrity, and pulse readiness bars.
+
 ## Step Log Format
 
 Every meaningful project action should be added here with:
