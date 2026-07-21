@@ -1,4 +1,4 @@
-﻿extends Node2D
+extends Node2D
 
 const GameState = preload("res://scripts/simulation/GameState.gd")
 
@@ -26,8 +26,6 @@ func _process(delta: float) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if game_state == null:
-		return
-	if not game_state.pending_upgrade_choices.is_empty():
 		return
 
 	if event is InputEventScreenDrag:

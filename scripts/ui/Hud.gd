@@ -7,7 +7,8 @@ var state
 var label: Label
 var tutorial: Label
 var controls_legend: Label
-var upgrade_panel: VBoxContainer
+var upgrade_title: Label
+var upgrade_panel: HBoxContainer
 var restart_button: Button
 
 func bind(game_state) -> void:
@@ -19,28 +20,37 @@ func bind(game_state) -> void:
 
 	controls_legend = Label.new()
 	controls_legend.position = Vector2(360.0, 24.0)
-	controls_legend.size = Vector2(336.0, 270.0)
+	controls_legend.size = Vector2(336.0, 300.0)
 	controls_legend.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	controls_legend.add_theme_font_size_override("font_size", 18)
-	controls_legend.text = "Управление\nA/D: шаг по башне\nW/S: дорожка вверх/вниз\nQ/E или мышь: вращать\nSpace/ПКМ: импульс\n\nЛегенда\nФиолетовый !: аварийный вентиль\nСиний щит: тяжелый враг\nОранжевый блок: обычный враг"
+	controls_legend.text = "Управление\nA/D: шаг по башне\nW/S: дорожка вверх/вниз\nQ/E или мышь: вращать\nSpace/ПКМ: импульс\n\nЛегенда\nФиолетовый !: аварийный вентиль\nСиний щит: тяжелый враг\nОранжевый блок: обычный враг\nРадар справа: вид сверху"
 	add_child(controls_legend)
 
 	tutorial = Label.new()
-	tutorial.position = Vector2(24.0, 1072.0)
-	tutorial.size = Vector2(672.0, 180.0)
+	tutorial.position = Vector2(24.0, 1018.0)
+	tutorial.size = Vector2(672.0, 94.0)
 	tutorial.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	tutorial.add_theme_font_size_override("font_size", 24)
+	tutorial.add_theme_font_size_override("font_size", 21)
 	add_child(tutorial)
 
-	upgrade_panel = VBoxContainer.new()
-	upgrade_panel.position = Vector2(42.0, 705.0)
-	upgrade_panel.size = Vector2(636.0, 320.0)
+	upgrade_title = Label.new()
+	upgrade_title.position = Vector2(24.0, 1120.0)
+	upgrade_title.size = Vector2(672.0, 24.0)
+	upgrade_title.add_theme_font_size_override("font_size", 18)
+	upgrade_title.text = "Быстрый апгрейд - выбери на ходу"
+	upgrade_title.visible = false
+	add_child(upgrade_title)
+
+	upgrade_panel = HBoxContainer.new()
+	upgrade_panel.position = Vector2(24.0, 1148.0)
+	upgrade_panel.size = Vector2(672.0, 104.0)
+	upgrade_panel.add_theme_constant_override("separation", 12)
 	upgrade_panel.visible = false
 	add_child(upgrade_panel)
 
 	restart_button = Button.new()
 	restart_button.text = "Начать заново"
-	restart_button.position = Vector2(250.0, 1010.0)
+	restart_button.position = Vector2(250.0, 1128.0)
 	restart_button.size = Vector2(220.0, 64.0)
 	restart_button.visible = false
 	restart_button.pressed.connect(func() -> void:
@@ -73,11 +83,11 @@ func refresh() -> void:
 	elif state.run_time < 8.0:
 		tutorial.text = "Ты бежишь по окружности башни: A/D. W/S меняют дорожку. Вращай башню Q/E или мышью, чтобы видеть нужные сектора."
 	elif state.run_time < 18.0:
-		tutorial.text = "Фиолетовый знак ! - аварийный вентиль. Встань на его сектор и дорожку, чтобы закрыть. Если таймер вентиля истечет, реактор получит урон."
+		tutorial.text = "Фиолетовый знак ! - аварийный вентиль. Встань на его сектор и дорожку, чтобы закрыть. Если таймер истечет, реактор получит урон."
 	elif state.run_time < 28.0:
 		tutorial.text = "Синие щиты - тяжелые враги: они медленные, но живучие. Space или ПКМ дает импульс рядом с тобой и помогает в критический момент."
 	else:
-		tutorial.text = "Выживи до конца таймера: закрывай вентили, держи врагов под автоогнем и выбирай улучшения, когда энергия заполнится."
+		tutorial.text = "Выживи до конца таймера: закрывай вентили, держи врагов под автоогнем и выбирай компактные улучшения без остановки забега."
 
 	_refresh_upgrade_panel()
 	restart_button.visible = state.run_status != "running"
@@ -86,29 +96,47 @@ func _refresh_upgrade_panel() -> void:
 	if upgrade_panel == null:
 		return
 
-	var has_choices: bool = not state.pending_upgrade_choices.is_empty()
+	var has_choices: bool = not state.pending_upgrade_choices.is_empty() and state.run_status == "running"
 	upgrade_panel.visible = has_choices
+	upgrade_title.visible = has_choices
 	if not has_choices:
 		for child in upgrade_panel.get_children():
 			child.queue_free()
 		return
 
-	if upgrade_panel.get_child_count() == state.pending_upgrade_choices.size() + 1:
+	if upgrade_panel.get_child_count() == state.pending_upgrade_choices.size():
 		return
 
 	for child in upgrade_panel.get_children():
 		child.queue_free()
 
-	var title := Label.new()
-	title.text = "Выбери улучшение реактора"
-	title.add_theme_font_size_override("font_size", 28)
-	upgrade_panel.add_child(title)
-
 	for upgrade in state.pending_upgrade_choices:
 		var button := Button.new()
 		button.text = "%s  %s\n%s" % [upgrade["icon"], upgrade["title"], upgrade["description"]]
-		button.custom_minimum_size = Vector2(620.0, 74.0)
+		button.custom_minimum_size = Vector2(330.0, 92.0)
+		button.add_theme_font_size_override("font_size", 15)
+		button.add_theme_stylebox_override("normal", _make_upgrade_style(Color(0.07, 0.13, 0.15, 0.92), Color(0.36, 0.72, 0.72, 0.72)))
+		button.add_theme_stylebox_override("hover", _make_upgrade_style(Color(0.10, 0.18, 0.19, 0.96), Color(0.95, 0.82, 0.36, 0.90)))
+		button.add_theme_stylebox_override("pressed", _make_upgrade_style(Color(0.13, 0.23, 0.22, 1.0), Color(0.52, 1.0, 0.78, 0.95)))
 		button.pressed.connect(func(upgrade_id := String(upgrade["id"])) -> void:
 			upgrade_selected.emit(upgrade_id)
 		)
 		upgrade_panel.add_child(button)
+
+func _make_upgrade_style(fill: Color, border: Color) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = fill
+	style.border_color = border
+	style.border_width_left = 2
+	style.border_width_top = 2
+	style.border_width_right = 2
+	style.border_width_bottom = 2
+	style.corner_radius_top_left = 8
+	style.corner_radius_top_right = 8
+	style.corner_radius_bottom_left = 8
+	style.corner_radius_bottom_right = 8
+	style.content_margin_left = 12
+	style.content_margin_right = 12
+	style.content_margin_top = 8
+	style.content_margin_bottom = 8
+	return style

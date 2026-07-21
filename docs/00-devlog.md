@@ -52,6 +52,14 @@
 
 - Added clear reactor-coil rotation cues: central glowing core, front work-zone highlight, moving surface ticks, and a golden seam marker.
 
+
+## 2026-07-22
+
+- Changed upgrades from a blocking overlay into compact bottom quick-pick cards.
+- Reduced upgrade choices from three to two and raised level energy from 8 to 10 to make upgrades less noisy.
+- Kept gameplay running while upgrade choices are visible: movement, rotation, auto-fire, vents, enemies, and pulse continue.
+- Restored HUD and gameplay documentation text as UTF-8 Russian after mojibake was found in local files.
+- Re-ran Godot 4.7 headless project check successfully after the upgrade-flow change.
 ## Step Log Format
 
 Every meaningful project action should be added here with:

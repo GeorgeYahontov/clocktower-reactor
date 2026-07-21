@@ -1,4 +1,4 @@
-﻿extends RefCounted
+extends RefCounted
 class_name GameState
 
 const GameConfig = preload("res://scripts/data/GameConfig.gd")
@@ -60,9 +60,6 @@ func tick(delta: float) -> void:
 	if run_status != "running":
 		_tick_effects(delta)
 		return
-	if not pending_upgrade_choices.is_empty():
-		_tick_effects(delta)
-		return
 
 	run_time += delta
 	_spawn_timer -= delta
@@ -114,7 +111,7 @@ func rotate_tower(delta_rotation: float) -> void:
 	tower_rotation = wrapf(tower_rotation + delta_rotation, 0.0, float(config.sector_count))
 
 func use_pulse() -> void:
-	if run_status != "running" or not pending_upgrade_choices.is_empty():
+	if run_status != "running":
 		return
 	if pulse_cooldown_remaining > 0.0:
 		return
@@ -146,7 +143,7 @@ func use_pulse() -> void:
 
 func collect_energy(amount: int) -> void:
 	energy += amount
-	if energy >= config.energy_per_level:
+	if energy >= config.energy_per_level and pending_upgrade_choices.is_empty():
 		energy -= config.energy_per_level
 		level += 1
 		pending_upgrade_choices = UpgradeCatalog.pick_choices(config.upgrade_choice_count, level + kills)

@@ -14,6 +14,7 @@ func _draw() -> void:
 		return
 
 	_draw_background()
+	_draw_reactor_status_glow()
 	_draw_tower_shell()
 	_draw_front_work_zone()
 	_draw_lane_rings()
@@ -36,6 +37,18 @@ func _draw_background() -> void:
 		var y := 90.0 + float(i) * 92.0
 		draw_line(Vector2(0.0, y), Vector2(720.0, y + 32.0), Color(0.12, 0.18, 0.21, 0.28), 2.0)
 
+func _draw_reactor_status_glow() -> void:
+	var viewport_size: Vector2 = get_viewport_rect().size
+	var integrity_ratio: float = float(state.reactor_integrity) / maxf(1.0, float(state.max_reactor_integrity))
+	if integrity_ratio <= 0.42 and state.run_status == "running":
+		var danger_alpha: float = lerpf(0.08, 0.22, 1.0 - integrity_ratio)
+		draw_rect(Rect2(Vector2.ZERO, viewport_size), Color(0.95, 0.12, 0.10, danger_alpha))
+		draw_rect(Rect2(Vector2(8.0, 8.0), viewport_size - Vector2(16.0, 16.0)), Color(1.0, 0.18, 0.12, 0.40), false, 8.0)
+
+	if not state.pending_upgrade_choices.is_empty() and state.run_status == "running":
+		var panel_rect := Rect2(Vector2(0.0, 1088.0), Vector2(viewport_size.x, 192.0))
+		draw_rect(panel_rect, Color(0.95, 0.72, 0.24, 0.11))
+		draw_line(Vector2(34.0, 1114.0), Vector2(viewport_size.x - 34.0, 1114.0), Color(0.95, 0.82, 0.36, 0.34), 3.0)
 func _draw_tower_shell() -> void:
 	var center: Vector2 = projector.center
 	var top_center := Vector2(center.x, 330.0)
@@ -234,7 +247,7 @@ func _radar_position(center: Vector2, radius: float, sector: int, lane: int, sec
 func _radar_angle(sector: int, sector_count: int) -> float:
 	return ((float(sector) - state.tower_rotation) / float(sector_count)) * TAU - PI * 0.5
 func _draw_result_overlay() -> void:
-	if state.run_status == "running" and state.pending_upgrade_choices.is_empty():
+	if state.run_status == "running":
 		return
 	var viewport_size: Vector2 = get_viewport_rect().size
 	var alpha: float = 0.68 if state.run_status != "running" else 0.34
