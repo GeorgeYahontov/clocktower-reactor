@@ -4,6 +4,7 @@ class_name UpgradeCatalog
 const UPGRADES := [
 	{
 		"id": "rapid_coils",
+		"icon": "⚡",
 		"title": "Быстрые катушки",
 		"description": "Автоогонь становится быстрее.",
 		"stat": "fire_interval",
@@ -11,6 +12,7 @@ const UPGRADES := [
 	},
 	{
 		"id": "wide_lens",
+		"icon": "◎",
 		"title": "Широкая линза",
 		"description": "Оружие лучше цепляет угрозы на соседних дорожках.",
 		"stat": "lane_weight",
@@ -18,6 +20,7 @@ const UPGRADES := [
 	},
 	{
 		"id": "reactor_patch",
+		"icon": "+",
 		"title": "Заплатка реактора",
 		"description": "Восстановить 1 прочность реактора.",
 		"stat": "integrity",
@@ -25,6 +28,7 @@ const UPGRADES := [
 	},
 	{
 		"id": "charged_cells",
+		"icon": "◆",
 		"title": "Заряженные ячейки",
 		"description": "Убийства дают больше энергии для уровня.",
 		"stat": "energy_bonus",
@@ -32,6 +36,7 @@ const UPGRADES := [
 	},
 	{
 		"id": "gyro_servos",
+		"icon": "↻",
 		"title": "Гиросерво",
 		"description": "Башня вращается отзывчивее.",
 		"stat": "rotation_speed",
@@ -39,6 +44,7 @@ const UPGRADES := [
 	},
 	{
 		"id": "hard_shell",
+		"icon": "■",
 		"title": "Крепкий корпус",
 		"description": "Увеличить максимум прочности реактора.",
 		"stat": "max_integrity",

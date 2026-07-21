@@ -14,27 +14,27 @@ func bind(game_state) -> void:
 	state = game_state
 	label = Label.new()
 	label.position = Vector2(24.0, 24.0)
-	label.add_theme_font_size_override("font_size", 25)
+	label.add_theme_font_size_override("font_size", 24)
 	add_child(label)
 
 	controls_legend = Label.new()
-	controls_legend.position = Vector2(382.0, 24.0)
-	controls_legend.size = Vector2(314.0, 190.0)
+	controls_legend.position = Vector2(360.0, 24.0)
+	controls_legend.size = Vector2(336.0, 270.0)
 	controls_legend.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	controls_legend.add_theme_font_size_override("font_size", 20)
-	controls_legend.text = "Управление\nA/D: шаг по башне\nW/S: дорожка вверх/вниз\nQ/E: вращать башню\nМышь: тянуть = вращать\nКлик снизу: шаг влево/вправо\nSpace/ПКМ: импульс"
+	controls_legend.add_theme_font_size_override("font_size", 18)
+	controls_legend.text = "Управление\nA/D: шаг по башне\nW/S: дорожка вверх/вниз\nQ/E или мышь: вращать\nSpace/ПКМ: импульс\n\nЛегенда\nФиолетовый !: аварийный вентиль\nСиний щит: тяжелый враг\nОранжевый блок: обычный враг"
 	add_child(controls_legend)
 
 	tutorial = Label.new()
-	tutorial.position = Vector2(24.0, 1090.0)
-	tutorial.size = Vector2(672.0, 150.0)
+	tutorial.position = Vector2(24.0, 1072.0)
+	tutorial.size = Vector2(672.0, 180.0)
 	tutorial.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	tutorial.add_theme_font_size_override("font_size", 25)
+	tutorial.add_theme_font_size_override("font_size", 24)
 	add_child(tutorial)
 
 	upgrade_panel = VBoxContainer.new()
-	upgrade_panel.position = Vector2(42.0, 735.0)
-	upgrade_panel.size = Vector2(636.0, 285.0)
+	upgrade_panel.position = Vector2(42.0, 705.0)
+	upgrade_panel.size = Vector2(636.0, 320.0)
 	upgrade_panel.visible = false
 	add_child(upgrade_panel)
 
@@ -53,7 +53,7 @@ func refresh() -> void:
 	if state == null or label == null:
 		return
 	var time_left: float = maxf(0.0, state.config.run_duration - state.run_time)
-	label.text = "Clocktower Reactor\nВремя: %.0f\nУровень: %d\nЭнергия: %d/%d\nРеактор: %d\nУбийства: %d\nВентили: %d\nИмпульс: %.1f" % [
+	label.text = "Clocktower Reactor\nВремя: %.0f\nУровень: %d\nЭнергия: %d/%d\nРеактор: %d\nУбийства: %d\nВентили закрыто: %d\nИмпульс: %.1f" % [
 		time_left,
 		state.level,
 		state.energy,
@@ -69,13 +69,15 @@ func refresh() -> void:
 	if state.run_status == "victory":
 		tutorial.text = "Реактор стабилизирован. Прототипный забег завершен."
 	elif state.run_status == "defeat":
-		tutorial.text = "Реактор пробит. Враги слишком часто добирались до твоей дорожки."
+		tutorial.text = "Реактор пробит. Враги или аварии слишком сильно повредили систему."
 	elif state.run_time < 8.0:
-		tutorial.text = "Теперь можно ходить по окружности башни: A/D или клик снизу слева/справа. W/S меняют дорожку вверх/вниз. Q/E или мышь вращают башню."
+		tutorial.text = "Ты бежишь по окружности башни: A/D. W/S меняют дорожку. Вращай башню Q/E или мышью, чтобы видеть нужные сектора."
 	elif state.run_time < 18.0:
-		tutorial.text = "Оружие стреляет автоматически. Держи опасных врагов на видимой стороне башни, чтобы сжечь их быстрее."
+		tutorial.text = "Фиолетовый знак ! - аварийный вентиль. Встань на его сектор и дорожку, чтобы закрыть. Если таймер вентиля истечет, реактор получит урон."
+	elif state.run_time < 28.0:
+		tutorial.text = "Синие щиты - тяжелые враги: они медленные, но живучие. Space или ПКМ дает импульс рядом с тобой и помогает в критический момент."
 	else:
-		tutorial.text = "Выживи до конца таймера. Закрывай аварийные вентили. Space или ПКМ дает импульс рядом с тобой, но требует перезарядки."
+		tutorial.text = "Выживи до конца таймера: закрывай вентили, держи врагов под автоогнем и выбирай улучшения, когда энергия заполнится."
 
 	_refresh_upgrade_panel()
 	restart_button.visible = state.run_status != "running"
@@ -104,8 +106,8 @@ func _refresh_upgrade_panel() -> void:
 
 	for upgrade in state.pending_upgrade_choices:
 		var button := Button.new()
-		button.text = "%s - %s" % [upgrade["title"], upgrade["description"]]
-		button.custom_minimum_size = Vector2(620.0, 58.0)
+		button.text = "%s  %s\n%s" % [upgrade["icon"], upgrade["title"], upgrade["description"]]
+		button.custom_minimum_size = Vector2(620.0, 74.0)
 		button.pressed.connect(func(upgrade_id := String(upgrade["id"])) -> void:
 			upgrade_selected.emit(upgrade_id)
 		)
